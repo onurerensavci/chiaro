@@ -1,0 +1,36 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Pp]ublish/
+artifacts/
+*.exe
+*.dll
+*.pdb
+*.zip
+
+# IDE / user files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Test / logs
+TestResults/
+*.log
+*.trx
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

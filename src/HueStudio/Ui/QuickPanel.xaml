@@ -1,0 +1,61 @@
+<Window x:Class="HueStudio.QuickPanel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Hue Studio" Width="388" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="True"
+        Foreground="{DynamicResource Text}" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13"
+        TextOptions.TextFormattingMode="Display">
+  <ContentControl x:Name="Surface" Style="{StaticResource FloatGlass}" Padding="18,16">
+    <StackPanel>
+      <!-- Başlık + güç -->
+      <DockPanel>
+        <ToggleButton x:Name="Power" Style="{StaticResource Switch}" DockPanel.Dock="Right" VerticalAlignment="Center" Click="Power_Click" ToolTip="Aç / Kapat" />
+        <Grid Width="40" Height="40" Margin="0,0,12,0" DockPanel.Dock="Left">
+          <Ellipse x:Name="Glow" Margin="-6" Opacity="0" />
+          <Ellipse x:Name="Chip" Stroke="#59FFFFFF" StrokeThickness="1" />
+        </Grid>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock x:Name="LampName" Text="Hue" FontSize="16" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="Status" Text="Bağlı değil" FontSize="11.5" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+
+      <!-- Parlaklık -->
+      <Border Style="{StaticResource Pill}" CornerRadius="16" Padding="12,8" Margin="0,14,0,0">
+        <DockPanel>
+          <Path DockPanel.Dock="Left" Width="18" Height="18" Margin="0,0,10,0" Stretch="Uniform" Stroke="{DynamicResource Muted}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                Data="M12,7 A5,5 0 1 1 11.99,7 Z M12,1 V3 M12,21 V23 M1,12 H3 M21,12 H23 M4.2,4.2 L5.6,5.6 M18.4,18.4 L19.8,19.8 M4.2,19.8 L5.6,18.4 M18.4,5.6 L19.8,4.2" />
+          <TextBlock x:Name="BriText" DockPanel.Dock="Right" Text="%70" Width="42" TextAlignment="Right" FontWeight="SemiBold" Foreground="{DynamicResource AccentSoft}" VerticalAlignment="Center" />
+          <Slider x:Name="Bri" Minimum="1" Maximum="100" Value="70" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="Bri_Changed" PreviewMouseLeftButtonUp="Bri_Release" KeyUp="Bri_KeyUp" VerticalAlignment="Center" />
+        </DockPanel>
+      </Border>
+
+      <!-- Favoriler -->
+      <TextBlock Text="FAVORİLER" Style="{StaticResource SectionLabel}" FontSize="10" Margin="2,14,0,6" />
+      <WrapPanel x:Name="Favorites" />
+
+      <!-- Sahneler -->
+      <TextBlock Text="SAHNELER" Style="{StaticResource SectionLabel}" FontSize="10" Margin="2,10,0,6" />
+      <WrapPanel x:Name="Scenes" />
+
+      <!-- Durum (mod / sayaç) -->
+      <Border x:Name="LiveBox" Style="{StaticResource Pill}" CornerRadius="14" Padding="12,8" Margin="0,10,0,0" Visibility="Collapsed">
+        <DockPanel>
+          <Button x:Name="LiveStop" Content="Durdur" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Click="LiveStop_Click" />
+          <Ellipse Width="8" Height="8" Fill="#30D158" Margin="0,0,8,0" VerticalAlignment="Center" />
+          <TextBlock x:Name="LiveText" FontSize="12" Foreground="{DynamicResource ModeText}" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+        </DockPanel>
+      </Border>
+
+      <!-- Alt -->
+      <DockPanel Margin="0,14,0,0">
+        <Button Content="Hue Studio’yu aç" Style="{StaticResource Primary}" DockPanel.Dock="Right" Margin="0" Click="Open_Click" />
+        <StackPanel Orientation="Horizontal">
+          <Button Content="Mini" Style="{StaticResource Small}" Click="Mini_Click" ToolTip="Mini mod" />
+          <Button x:Name="SleepButton" Content="Uyku 30 dk" Style="{StaticResource Small}" Click="Sleep_Click" ToolTip="Uyku sayacı" />
+        </StackPanel>
+      </DockPanel>
+    </StackPanel>
+  </ContentControl>
+</Window>
