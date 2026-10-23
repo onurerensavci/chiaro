@@ -139,14 +139,12 @@ public partial class MainWindow
 		for (int i = 0; i < 20 && busy; i++) await Task.Delay(500);
 		if (ble.Ready) return true;
 		if (busy || Devices.SelectedItem is not Lamp lamp) return false;
-		autoConnecting = true;
 		try
 		{
 			await ConnectSelected(lamp);
 		}
 		finally
 		{
-			autoConnecting = false;
 		}
 		return ble.Ready;
 	}

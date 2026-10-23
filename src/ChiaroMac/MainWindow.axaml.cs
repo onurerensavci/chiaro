@@ -39,7 +39,6 @@ public partial class MainWindow : Window
 	private bool closed;
 	private bool lastRunFailed;
 	private bool autoCancelled;
-	private bool autoConnecting;
 	private bool exitRequested;
 	private int scanGeneration;
 	private string connectedName = "";
@@ -57,6 +56,21 @@ public partial class MainWindow : Window
 	private static string DataFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create), "HueBluetooth");
 	private static string LampPath => Path.Combine(DataFolder, "last-lamp-mac.json");
 	private static string ThemePath => Path.Combine(DataFolder, "appearance.json");
+
+	/// <summary>Oturum açılışında (--background) pencere gösterilmeden menü çubuğunda başla.</summary>
+	internal static bool StartHidden;
+	private bool started;
+
+	/// <summary>Pencereyi açmadan başlat: menü çubuğu simgesi + son lambaya bağlanma.</summary>
+	internal async void StartInBackground()
+	{
+		if (started) return;
+		started = true;
+		Log("Arka planda başlatıldı (oturum açılışı).");
+		InitTray();
+		_ = AutoCheckUpdates();
+		await StartupConnect();
+	}
 
 	public MainWindow()
 	{
@@ -78,6 +92,8 @@ public partial class MainWindow : Window
 			ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.PreferSystemChrome;
 			ExtendClientAreaTitleBarHeightHint = 52;
 			TrafficLightSpace.Width = 70;
+			// Başlık satırının ortası (6 + 40/2 = 26) trafik ışıklarının ortasıyla (52/2) aynı hizada olsun.
+			Header.Margin = new Thickness(0, -4, 0, 10);
 		}
 		else
 		{
@@ -107,7 +123,8 @@ public partial class MainWindow : Window
 		StatusText.Text = L.T("status_connect_bulb");
 		DetailText.Text = L.T("status_remembered");
 		StateText.Text = L.T("not_connected_dot");
-		ShowTab(settings.SelectedTab is "Gökkuşağı" or "Şömine" or "Gün ışığı" ? settings.SelectedTab : "Manuel");
+		InitMacExtras();
+		ShowTab(UserModes.Contains(settings.SelectedTab) ? settings.SelectedTab : "Manuel");
 		L.Changed += ApplyLanguage;
 		initialized = true;
 		ApplyLanguage();
@@ -116,7 +133,10 @@ public partial class MainWindow : Window
 
 		Opened += async (_, _) =>
 		{
+			if (started) return;
+			started = true;
 			InitTray();
+			_ = AutoCheckUpdates();
 			await StartupConnect();
 			await ScreenshotIfRequested();
 		};
@@ -156,6 +176,21 @@ public partial class MainWindow : Window
 		settings.Daylight.MaxKelvin = Math.Clamp(settings.Daylight.MaxKelvin, 4000, 6500);
 		settings.Daylight.MinBrightness = Math.Clamp(settings.Daylight.MinBrightness, 1, 60);
 		settings.Daylight.MaxBrightness = Math.Clamp(settings.Daylight.MaxBrightness, 20, 100);
+		settings.Screen.IntervalMs = Math.Clamp(settings.Screen.IntervalMs, 50, 1000);
+		settings.Screen.Area = Math.Clamp(settings.Screen.Area, 0, 5);
+		settings.Screen.Method = Math.Clamp(settings.Screen.Method, 0, 1);
+		settings.Screen.Monitor = Math.Max(0, settings.Screen.Monitor);
+		settings.Screen.Smoothing = Math.Clamp(settings.Screen.Smoothing, 0, 95);
+		settings.Screen.SaturationBoost = Math.Clamp(settings.Screen.SaturationBoost, 0, 100);
+		settings.Audio.Sensitivity = Math.Clamp(settings.Audio.Sensitivity, 1, 12);
+		settings.Audio.Attack = Math.Clamp(settings.Audio.Attack, 10, 100);
+		settings.Audio.Release = Math.Clamp(settings.Audio.Release, 5, 90);
+		settings.Audio.MinBrightness = Math.Clamp(settings.Audio.MinBrightness, 1, 60);
+		settings.Audio.MaxBrightness = Math.Clamp(settings.Audio.MaxBrightness, 20, 100);
+		settings.Audio.IntervalMs = Math.Clamp(settings.Audio.IntervalMs, 100, 600);
+		settings.Spotify.Brightness = Math.Clamp(settings.Spotify.Brightness, 5, 100);
+		settings.Spotify.TransitionMs = Math.Clamp(settings.Spotify.TransitionMs, 200, 5000);
+		settings.Spotify.Saturation = Math.Clamp(settings.Spotify.Saturation, 0, 100);
 		settings.Wake.FadeMinutes = Math.Clamp(settings.Wake.FadeMinutes, 5, 60);
 		settings.Wake.TargetBrightness = Math.Clamp(settings.Wake.TargetBrightness, 10, 100);
 	}
@@ -559,7 +594,6 @@ public partial class MainWindow : Window
 		lamps.Add(lamp);
 		Devices.SelectedItem = lamp;
 		ScanSummary.Text = L.T("reconnecting_last");
-		autoConnecting = true;
 		try
 		{
 			for (int attempt = 0; attempt < 3; attempt++)
@@ -573,7 +607,6 @@ public partial class MainWindow : Window
 		}
 		finally
 		{
-			autoConnecting = false;
 		}
 		if (!closed) ScanSummary.Text = ble.Ready ? L.T("connected_dot") : L.T("connect_failed_retry");
 	}
@@ -866,13 +899,15 @@ public partial class MainWindow : Window
 
 	private void UpdateDock()
 	{
+		RefreshMini();
 		if (DockTitle == null) return;
 		bool ready = ble.Ready;
 		MColor c = colorKnown ? currentColor : MColor.FromRgb(0x6B, 0x73, 0x85);
 		DockColor.Fill = new SolidColorBrush(ready && colorKnown ? A(c) : Color.Parse("#6B7385"));
 		DockBulb.Opacity = ready && powerOn == true ? 1 : 0.45;
 		string name = !colorKnown ? L.T("color_unknown") : lastWasWhite ? $"{TemperatureSlider.Value:F0} K" : Palette.NameOf(c);
-		DockTitle.Text = ready ? (colorKnown && !lastWasWhite ? $"{name}   {ColorMath.Hex(c)}" : name) : L.T("not_connected");
+		string hex = ColorMath.Hex(c);
+		DockTitle.Text = ready ? (colorKnown && !lastWasWhite && !string.Equals(name, hex, StringComparison.OrdinalIgnoreCase) ? $"{name}   {hex}" : name) : L.T("not_connected");
 		DockSub.Text = modeName.Length > 0 ? L.F("modes_active", L.Mode(modeName)) : ready ? (powerOn == true ? L.T("on") : powerOn == false ? L.T("off") : L.T("unknown")) : L.T("no_color");
 		DockBrightness.Text = L.Pct(liveBrightness ?? BrightnessSlider.Value);
 		RebuildTrayStatus();

@@ -183,6 +183,15 @@ public partial class MainWindow
 				case "fire": ShowTab("Şömine"); await StartMode("Şömine"); break;
 				case "daylight": ShowTab("Gün ışığı"); await StartMode("Gün ışığı"); break;
 				case "screen": ShowTab("Ekran"); break;
+				case "screenlive": ShowTab("Ekran"); await StartMode("Ekran"); break;
+				case "audio": ShowTab("Ses"); await StartMode("Ses"); break;
+				case "audiotab": ShowTab("Ses"); break;
+				case "spotify": ShowTab("Spotify"); await StartMode("Spotify"); break;
+				case "permscreen": ShowTab("Ekran"); ShowPermissionDemo(Privacy.ScreenPane); break;
+				case "permauto": ShowTab("Spotify"); ShowPermissionDemo(Privacy.AutomationPane); break;
+				case "mini": ShowMini(); break;
+				case "miniscenes": ShowMini(); SetMiniPanel("scenes"); break;
+				case "minimodes": ShowMini(); SetMiniPanel("modes"); break;
 				case "color": await ApplyColor(MColor.FromRgb(0xFF, 0x8C, 0x1A)); break;
 				case "scene": await ApplySceneById("okuma"); break;
 				case "sleep": StartSleepTimer(30); break;
@@ -196,9 +205,10 @@ public partial class MainWindow
 		await Task.Delay(500);
 		try
 		{
-			PixelSize size = new PixelSize((int)Bounds.Width, (int)Bounds.Height);
+			Window target = mini is { IsVisible: true } ? mini : this;
+			PixelSize size = new PixelSize((int)target.Bounds.Width, (int)target.Bounds.Height);
 			using RenderTargetBitmap bmp = new RenderTargetBitmap(size, new Vector(96, 96));
-			bmp.Render(this);
+			bmp.Render(target);
 			bmp.Save(path);
 			Log("Ekran görüntüsü: " + Path.GetFileName(path));
 		}

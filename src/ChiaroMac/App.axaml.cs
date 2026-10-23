@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -29,6 +30,7 @@ public partial class App : Application
 	{
 		if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
 		{
+			MainWindow.StartHidden = desktop.Args?.Contains(LoginItem.BackgroundArgument) == true;
 			MainWindow w = new MainWindow();
 			desktop.MainWindow = w;
 			desktop.ShutdownRequested += (_, _) => w.PrepareForExit();
@@ -47,7 +49,8 @@ public partial class App : Application
 			{
 				AppLog.Write("Etkinleştirme olayı: " + ex.Message);
 			}
-			w.Show();
+			if (MainWindow.StartHidden) w.StartInBackground();
+			else w.Show();
 		}
 		base.OnFrameworkInitializationCompleted();
 	}

@@ -55,6 +55,8 @@
               <TextBlock x:Name="HeaderStatus" FontSize="11" VerticalAlignment="Center" />
             </StackPanel>
           </Border>
+          <Button Classes="pill" x:Name="UpdateButton" ui:Tr.Key="hdr_check_updates" ui:Tr.Tip="hdr_check_updates_tip" Click="CheckUpdates_Click" />
+          <Button Classes="pill" x:Name="MiniButton" ui:Tr.Key="hdr_mini" ui:Tr.Tip="hdr_mini_tip" Click="Mini_Click" />
           <Button Classes="pill" x:Name="HideButton" ui:Tr.Key="hdr_hide" ui:Tr.Tip="hdr_hide_tip" Click="Hide_Click" />
         </StackPanel>
       </Grid>
@@ -104,7 +106,7 @@
       </Border>
 
       <ScrollViewer x:Name="MainScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid ColumnDefinitions="410,14,*" Margin="0,0,4,0">
+        <Grid ColumnDefinitions="410,14,*" Margin="0,0,14,0">
           <!-- ===================== SOL SÜTUN ===================== -->
           <StackPanel Grid.Column="0">
             <!-- Cihaz -->
@@ -245,6 +247,8 @@
                   <TextBlock Classes="label" ui:Tr.Key="mac_appearance" />
                   <Button Grid.Column="1" Classes="pill" x:Name="ThemeButton2" Width="170" Click="Theme_Click" />
                 </Grid>
+                <CheckBox x:Name="AutostartBox" ui:Tr.Key="autostart" ui:Tr.Tip="autostart_tip" Click="Autostart_Click" />
+                <CheckBox x:Name="AutoUpdateBox" ui:Tr.Key="mac_upd_auto" Click="AutoUpdate_Click" />
                 <WrapPanel>
                   <Button Classes="pill" Margin="0,0,6,6" ui:Tr.Key="help" Click="Help_Click" />
                   <Button Classes="pill" Margin="0,0,6,6" ui:Tr.Key="mac_bt_privacy" ui:Tr.Tip="mac_bt_privacy_tip" Click="BtSettings_Click" />
@@ -285,7 +289,7 @@
                     <TextBlock x:Name="ModeBadgeText" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource BadgeGreenFg}" />
                   </Border>
                 </Grid>
-                <WrapPanel x:Name="ModeTiles" />
+                <UniformGrid x:Name="ModeTiles" Columns="4" />
                 <Border Classes="inner">
                   <StackPanel Spacing="8">
                     <Grid ColumnDefinitions="*,Auto">
@@ -295,6 +299,84 @@
                       </StackPanel>
                       <Button Grid.Column="1" Classes="pill" x:Name="ModeReset" ui:Tr.Key="restore_defaults" ui:Tr.Tip="restore_defaults_tip" Click="ModeReset_Click" VerticalAlignment="Top" />
                     </Grid>
+
+                    <!-- Ekran -->
+                    <Grid x:Name="ScreenOptions" ColumnDefinitions="110,*,124" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" IsVisible="False">
+                      <TextBlock Classes="label" ui:Tr.Key="update_word" />
+                      <Slider Grid.Column="1" x:Name="ScInterval" Minimum="50" Maximum="1000" />
+                      <TextBlock Grid.Column="2" x:Name="ScIntervalLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="1" Classes="label" ui:Tr.Key="area" />
+                      <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="ScArea" HorizontalAlignment="Stretch" Margin="0,2" />
+                      <TextBlock Grid.Row="2" Classes="label" ui:Tr.Key="monitor" />
+                      <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" x:Name="ScMonitor" HorizontalAlignment="Stretch" Margin="0,2" />
+                      <TextBlock Grid.Row="3" Classes="label" ui:Tr.Key="smoothing" />
+                      <Slider Grid.Row="3" Grid.Column="1" x:Name="ScSmooth" Minimum="0" Maximum="95" />
+                      <TextBlock Grid.Row="3" Grid.Column="2" x:Name="ScSmoothLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="4" Classes="label" ui:Tr.Key="method" />
+                      <ComboBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="ScMethod" HorizontalAlignment="Stretch" Margin="0,2" />
+                      <TextBlock Grid.Row="5" Classes="label" ui:Tr.Key="vividness" />
+                      <Slider Grid.Row="5" Grid.Column="1" x:Name="ScBoost" Minimum="0" Maximum="100" />
+                      <TextBlock Grid.Row="5" Grid.Column="2" x:Name="ScBoostLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <CheckBox Grid.Row="6" Grid.ColumnSpan="3" x:Name="ScIgnoreDark" ui:Tr.Key="ignore_dark" />
+                      <CheckBox Grid.Row="7" Grid.ColumnSpan="3" x:Name="ScFollow" ui:Tr.Key="follow_brightness" />
+                    </Grid>
+
+                    <!-- Ses -->
+                    <Grid x:Name="AudioOptions" ColumnDefinitions="110,*,90" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" IsVisible="False">
+                      <TextBlock Classes="label" ui:Tr.Key="mac_audio_source" ui:Tr.Tip="mac_audio_source_tip" />
+                      <ComboBox Grid.Column="1" Grid.ColumnSpan="2" x:Name="AuSource" HorizontalAlignment="Stretch" Margin="0,2" />
+                      <TextBlock Grid.Row="1" Classes="label" ui:Tr.Key="sensitivity" />
+                      <Slider Grid.Row="1" Grid.Column="1" x:Name="AuSens" Minimum="1" Maximum="12" />
+                      <TextBlock Grid.Row="1" Grid.Column="2" x:Name="AuSensLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="2" Classes="label" ui:Tr.Key="response" />
+                      <Slider Grid.Row="2" Grid.Column="1" x:Name="AuAttack" Minimum="10" Maximum="100" />
+                      <TextBlock Grid.Row="2" Grid.Column="2" x:Name="AuAttackLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="3" Classes="label" ui:Tr.Key="decay" />
+                      <Slider Grid.Row="3" Grid.Column="1" x:Name="AuRelease" Minimum="5" Maximum="90" />
+                      <TextBlock Grid.Row="3" Grid.Column="2" x:Name="AuReleaseLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="4" Classes="label" ui:Tr.Key="min" />
+                      <Slider Grid.Row="4" Grid.Column="1" x:Name="AuMin" Minimum="1" Maximum="60" />
+                      <TextBlock Grid.Row="4" Grid.Column="2" x:Name="AuMinLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="5" Classes="label" ui:Tr.Key="max" />
+                      <Slider Grid.Row="5" Grid.Column="1" x:Name="AuMax" Minimum="20" Maximum="100" />
+                      <TextBlock Grid.Row="5" Grid.Column="2" x:Name="AuMaxLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                      <TextBlock Grid.Row="6" Classes="label" ui:Tr.Key="update_word" />
+                      <Slider Grid.Row="6" Grid.Column="1" x:Name="AuInterval" Minimum="100" Maximum="600" />
+                      <TextBlock Grid.Row="6" Grid.Column="2" x:Name="AuIntervalLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                    </Grid>
+
+                    <!-- Spotify -->
+                    <StackPanel x:Name="SpotifyOptions" Spacing="8" IsVisible="False">
+                      <Border Classes="inner" Padding="10,8">
+                        <Grid ColumnDefinitions="Auto,*">
+                          <Border x:Name="NowPlayingChip" Width="34" Height="34" CornerRadius="8" Background="#33FFFFFF" Margin="0,0,10,0" />
+                          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="NowPlayingTitle" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="NowPlayingArtist" Classes="sub" TextTrimming="CharacterEllipsis" />
+                          </StackPanel>
+                        </Grid>
+                      </Border>
+                      <Grid ColumnDefinitions="110,*,90" RowDefinitions="Auto,Auto,Auto,Auto">
+                        <TextBlock Classes="label" ui:Tr.Key="brightness" />
+                        <Slider Grid.Column="1" x:Name="SpBri" Minimum="5" Maximum="100" />
+                        <TextBlock Grid.Column="2" x:Name="SpBriLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                        <TextBlock Grid.Row="1" Classes="label" ui:Tr.Key="transition" />
+                        <Slider Grid.Row="1" Grid.Column="1" x:Name="SpFade" Minimum="200" Maximum="5000" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" x:Name="SpFadeLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                        <TextBlock Grid.Row="2" Classes="label" ui:Tr.Key="vividness" />
+                        <Slider Grid.Row="2" Grid.Column="1" x:Name="SpSat" Minimum="0" Maximum="100" />
+                        <TextBlock Grid.Row="2" Grid.Column="2" x:Name="SpSatLabel" Classes="label" HorizontalAlignment="Right" Foreground="{DynamicResource TextAccent}" FontWeight="Bold" />
+                        <CheckBox Grid.Row="3" Grid.ColumnSpan="3" x:Name="SpOnly" ui:Tr.Key="spotify_only" ui:Tr.Tip="spotify_only_tip" />
+                      </Grid>
+                    </StackPanel>
+
+                    <!-- İzin uyarısı -->
+                    <Border x:Name="PermissionPanel" Classes="inner" Padding="10,8" IsVisible="False" BorderBrush="#66FF9F0A" BorderThickness="1">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock x:Name="PermissionText" Classes="sub" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <Button Grid.Column="1" Classes="pill" x:Name="PermissionButton" Click="PermissionButton_Click" VerticalAlignment="Center" />
+                      </Grid>
+                    </Border>
 
                     <!-- Gökkuşağı -->
                     <Grid x:Name="RainbowOptions" ColumnDefinitions="110,*,70" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" IsVisible="False">

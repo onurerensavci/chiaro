@@ -20,6 +20,10 @@
     <Compile Include="../ChiaroMac/Core/Loc.cs" Link="Mac/Loc.cs" />
     <Compile Include="../ChiaroMac/Core/MacStrings.cs" Link="Mac/MacStrings.cs" />
     <Compile Include="../ChiaroMac/Core/Log.cs" Link="Mac/Log.cs" />
+    <Compile Include="../ChiaroMac/Core/Ambient.cs" Link="Mac/Ambient.cs" />
+    <Compile Include="../ChiaroMac/Mac/MacSystem.cs" Link="Mac/MacSystem.cs" />
+    <Compile Include="../ChiaroMac/Compat/WpfMediaShim.cs" Link="Mac/WpfMediaShim.cs" />
+    <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

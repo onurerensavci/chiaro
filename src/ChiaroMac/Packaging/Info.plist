@@ -28,7 +28,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>3.4.0</string>
 	<key>CFBundleVersion</key>
-	<string>3.4.0.1</string>
+	<string>3.4.0.2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSArchitecturePriority</key>
@@ -49,7 +49,13 @@
 	<string>Chiaro, Philips Hue Bluetooth ampullerini bulmak ve kontrol etmek için Bluetooth kullanır. / Chiaro uses Bluetooth to find and control your Philips Hue Bluetooth bulbs.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Chiaro, Philips Hue Bluetooth ampullerini kontrol etmek için Bluetooth kullanır. / Chiaro uses Bluetooth to control your Philips Hue Bluetooth bulbs.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Chiaro, Ekran ve Ses modlarında ekranın rengini ve sistem sesini okuyup ampule yansıtır; hiçbir şey kaydedilmez veya gönderilmez. / Chiaro reads your screen colors and system audio for the Screen and Audio modes; nothing is recorded or sent.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Chiaro, Ses modunda mikrofon seçiliyse ses seviyesini ölçer; ses kaydedilmez. / Chiaro measures the sound level for the Audio mode when the microphone source is selected; nothing is recorded.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Chiaro, Spotify modunda çalan şarkıyı ve kapak resmini okumak için Spotify'a (veya Müzik'e) soru sorar. / Chiaro asks Spotify (or Music) for the current track and its cover art for the Spotify mode.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Chiaro — test build (Mac test 1)</string>
+	<string>Chiaro — test build (Mac test 2)</string>
 </dict>
 </plist>
