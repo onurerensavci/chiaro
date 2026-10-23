@@ -26,8 +26,6 @@ Rengi, parlaklığı ve beyaz tonunu ayarla; ekranınla, müziğinle ya da gün�
 
 **Chiaro**, İtalyanca “ışık” demek; ressamların ışık ile gölge oyunu *chiaroscuro*'dan gelir. Işık ile gölgenin düellosu, tıpkı Light ile L gibi.
 
-> **Eski adı Hue Studio.** v3.2 ve öncesi *Hue Studio* adıyla yayımlandı; 3.3 ile ad **Chiaro** oldu (“Hue” Philips'in markası). v3.2'den geçmek için `Chiaro_v3.3.exe`'yi indirip çalıştırman yeter; ayarların korunur. Sonraki sürümler uygulamanın içinden gelir.
-
 Bu, benim bu türdeki ilk projem; fikirden tasarıma her adımını **Grok Bot** ile birlikte geliştirdim.
 
 ![Chiaro ana pencere](docs/screenshots/ana-pencere.png)
@@ -99,7 +97,7 @@ Kurulum gerekmez; tek dosya, .NET dahil. Sonraki sürümleri uygulamanın içind
 - Spotify / müzik modu Windows medya oturumu sağlayan oynatıcılarla çalışır.
 - Bildirim ışığı, Windows bildirim veritabanını salt okunur yoklar; yalnızca uygulama adını okur, içeriği okumaz.
 - Uygulama kod imzalı değildir (SmartScreen uyarısı bu yüzden).
-- Ayarlar `%LOCALAPPDATA%\HueBluetooth` klasöründe saklanır (eski adla aynı; Hue Studio'daki ayarların aynen kullanılır).
+- Ayarlar `%LOCALAPPDATA%\HueBluetooth` klasöründe saklanır.
 - Güncelleme denetimi açılışta en fazla günde bir kez GitHub'a yalnızca son sürümü sorar; başka veri gönderilmez. Exe'nin bulunduğu klasöre yazma izni gerekir (ör. Belgeler veya Masaüstü).
 
 ## 🛠️ Kaynaktan derleme

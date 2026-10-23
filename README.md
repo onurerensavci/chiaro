@@ -26,8 +26,6 @@ Set the color, brightness and white tone, and sync the light with your screen, y
 
 **Chiaro** is Italian for “light”, from *chiaroscuro*, the painters' play of light and shadow. A duel of light and shadow, like Light and L.
 
-> **Formerly Hue Studio.** Versions up to 3.2 were released as *Hue Studio*; with 3.3 the name became **Chiaro** (“Hue” is a Philips trademark). To move from v3.2, just download and run `Chiaro_v3.3.exe`; your settings are kept. Later versions arrive from inside the app.
-
 This is my first project of its kind; I built every step of it, from the idea to the design, together with **Grok Bot**.
 
 ![Chiaro main window](docs/screenshots/ana-pencere-en.png)
@@ -99,7 +97,7 @@ No installation needed; it's a single file with .NET included. Later versions ca
 - Spotify / music mode works with players that provide a Windows media session.
 - The notification light polls the Windows notification database read-only; it reads only the app name, never the content.
 - The app isn't code-signed (hence the SmartScreen warning).
-- Settings are stored in `%LOCALAPPDATA%\HueBluetooth` (same as before, so your Hue Studio settings are used as they are).
+- Settings are stored in `%LOCALAPPDATA%\HueBluetooth` .
 - The update check asks GitHub only for the latest release, at most once a day at startup; no other data is sent. The folder containing the exe must be writable (e.g. Documents or Desktop).
 
 ## 🛠️ Building from source
