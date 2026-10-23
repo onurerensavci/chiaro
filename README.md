@@ -49,7 +49,7 @@ Bu, benim bu türdeki ilk projem; fikirden tasarıma her adımını **Grok Bot**
 - 🎨 **45 hazır renk + renk çarkı**, HEX girişi ve favori renkler.
 - 🔄 **Uygulama içi güncelleme**: yeni sürüm çıkınca başlıkta **Güncelle** düğmesi ve hızlı panelde küçük bir uyarı belirir. Sürüm notlarına bak, tek tıkla indir; dosya doğrulanır, uygulama kendini yeniler ve yeniden açılır. İstersen **Güncellemeleri denetle** ile elle de bakabilirsin.
 - 🌍 **Türkçe ve İngilizce**: arayüz sistem diline göre Türkçe ya da İngilizce açılır; **Ayarlar → Dil / Language** ile değiştir, yeniden başlatmadan anında uygulanır.
-- 🚀 **Windows ile başlat**: açılışta sessizce saat yanında başlar. Mac'te **Oturum açılışında başlat** ile yalnızca menü çubuğunda başlar.
+- 🚀 **Windows ile başlat**: açılışta sessizce saat yanında başlar. Mac'te **Oturum açılışında başlat** ile yalnızca menü çubuğunda başlar. İstersen **Ayarlar → Bilgisayar açılınca ışığı aç** ile açılışta son ampule bağlanıp ışığı da açar (yalnız bilgisayarla birlikte başlayınca; bunun için Windows ile başlat / Oturum açılışında başlat açık olmalı).
 - 🍎 **macOS (Apple Silicon)**: aynı arayüz Mac'te de var: sahneler, Ekran, Ses (sistem sesi ya da mikrofon), Spotify / Müzik, Gökkuşağı, Şömine, Gün ışığı, zamanlayıcı, menü çubuğu simgesi, mini mod ve uygulama içi güncelleme.
 
 ## 📸 Ekran görüntüleri
@@ -79,8 +79,8 @@ Bu, benim bu türdeki ilk projem; fikirden tasarıma her adımını **Grok Bot**
 
 En son sürümü **[Releases sayfasından](https://github.com/onurerensavci/chiaro/releases/latest)** indir:
 
-- **Windows:** `Chiaro_v3.5.exe`. Kurulum gerekmez; tek dosya, .NET dahil.
-- **macOS:** `Chiaro_v3.5_mac.zip`. Zip'i aç, çıkan **Chiaro.app**'i **Uygulamalar** klasörüne taşı.
+- **Windows:** `Chiaro_v3.6.exe`. Kurulum gerekmez; tek dosya, .NET dahil.
+- **macOS:** `Chiaro_v3.6_mac.zip`. Zip'i aç, çıkan **Chiaro.app**'i **Uygulamalar** klasörüne taşı.
 
 Sonraki sürümleri uygulamanın içinden güncelleyebilirsin. Her dosyanın SHA-256 değeri sürüm notlarında ve yanındaki `.sha256` dosyasında.
 
@@ -94,7 +94,7 @@ Sonraki sürümleri uygulamanın içinden güncelleyebilirsin. Her dosyanın SHA
 
 ### Windows
 
-1. `Chiaro_v3.5.exe` dosyasını çalıştır. Uygulama imzalı olmadığı için Windows SmartScreen uyarı verebilir:
+1. `Chiaro_v3.6.exe` dosyasını çalıştır. Uygulama imzalı olmadığı için Windows SmartScreen uyarı verebilir:
    **Daha fazla bilgi → Yine de çalıştır**.
 2. Ampulü aç ve bilgisayara yaklaştır. Ampulün Bluetooth ile keşfedilebilir olması gerekir. Gerekirse telefondaki Hue uygulamasında
    *Ayarlar → Sesli asistanlar → Görünür yap* ile ampulü görünür yap ve telefonun Hue Bluetooth bağlantısını kapat.
@@ -102,7 +102,7 @@ Sonraki sürümleri uygulamanın içinden güncelleyebilirsin. Her dosyanın SHA
 
 ### macOS
 
-1. `Chiaro_v3.5_mac.zip` dosyasını aç ve **Chiaro.app**'i **Uygulamalar** klasörüne taşı (oturum açılışında başlatma ve uygulama içi güncelleme orada en iyi çalışır).
+1. `Chiaro_v3.6_mac.zip` dosyasını aç ve **Chiaro.app**'i **Uygulamalar** klasörüne taşı (oturum açılışında başlatma ve uygulama içi güncelleme orada en iyi çalışır).
 2. Uygulama Apple tarafından imzalanıp onaylanmadığı için ilk açılışta macOS *"Chiaro" doğrulanamadı* uyarısı verir:
    - **macOS 15 Sequoia ve sonrası:** uyarıda **Bitti**'ye bas, sonra **Sistem Ayarları → Gizlilik ve Güvenlik**'te aşağı kaydır, "Chiaro engellendi" satırında **Yine de Aç**'a bas ve onayla.
    - **macOS 14 Sonoma ve öncesi:** Chiaro'ya **sağ tıkla (Control-tık) → Aç**, çıkan pencerede yine **Aç**.
