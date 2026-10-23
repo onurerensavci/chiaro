@@ -10,7 +10,7 @@ public static class AutoStart
 	public const string TrayArgument = "--tray";
 	private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
 	private const string ValueName = "Chiaro";
-	/// <summary>Eski değer adları: 3.2 ve öncesi (Hue Studio) ve 3.3 deneme adı.</summary>
+	/// <summary>Eski değer adları: eski sürümler ve 3.3 deneme adı.</summary>
 	internal static readonly string[] LegacyValueNames = { "HueStudio", "Sati" };
 	internal const string LegacyValueName = "HueStudio";
 
