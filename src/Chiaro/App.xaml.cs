@@ -327,7 +327,15 @@ public partial class App : Application
 		{
 			throw new InvalidOperationException("settings roundtrip failed");
 		}
-		return "\nCore: daylight curve, default scenes, sunrise colors, notification app match, album color, settings roundtrip: PASS.";
+		// Renk sıcaklığı geri okuması: ampul mired saklar, etiket istenen değeri (50 K adımı) göstermeli (3003 K değil).
+		for (int k = 2200; k <= 6500; k += 50)
+		{
+			if (Protocol.Kelvin(Protocol.Temperature(k)) != k)
+			{
+				throw new InvalidOperationException($"Kelvin readback {k} -> {Protocol.Kelvin(Protocol.Temperature(k))}");
+			}
+		}
+		return "\nCore: daylight curve, default scenes, sunrise colors, notification app match, album color, settings roundtrip, kelvin readback (3000 K -> 3000 K): PASS.";
 	}
 
 	private static async Task<string> NotificationDbCheck(string folder)

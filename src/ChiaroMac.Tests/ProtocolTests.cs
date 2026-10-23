@@ -51,11 +51,23 @@ public class ProtocolTests
 	[Fact]
 	public void KelvinRead()
 	{
-		Assert.Equal(3003, Protocol.Kelvin(new byte[] { 0x4D, 0x01 }));
+		Assert.Equal(3000, Protocol.Kelvin(new byte[] { 0x4D, 0x01 }));
 		Assert.Null(Protocol.Kelvin(new byte[] { 0, 0 }));
 		Assert.Null(Protocol.Kelvin(new byte[] { 0xFF, 0xFF }));
 		Assert.Null(Protocol.Kelvin(new byte[] { 1 }));
 		Assert.Null(Protocol.Kelvin(null));
+	}
+
+	[Fact]
+	public void KelvinRoundTripsToRequestedValueIn50KSteps()
+	{
+		// Ampul mired saklar; okunan değer istenen değere (50 K adımlarında) geri dönmeli: 3000 K → 3000 K, 3003 K değil.
+		for (int k = 2200; k <= 6500; k += 50)
+		{
+			Assert.Equal(k, Protocol.Kelvin(Protocol.Temperature(k)));
+		}
+		Assert.Equal(3000, Protocol.SnapKelvin(3003.0));
+		Assert.Equal(2200, Protocol.SnapKelvin(2197.8));
 	}
 
 	[Fact]

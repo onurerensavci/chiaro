@@ -183,7 +183,7 @@
                           </LinearGradientBrush>
                         </Border.Background>
                       </Border>
-                      <Slider x:Name="TemperatureSlider" Classes="white" Minimum="2200" Maximum="6500" Value="3000" />
+                      <Slider x:Name="TemperatureSlider" Classes="white" Minimum="2200" Maximum="6500" Value="3000" IsSnapToTickEnabled="True" TickFrequency="50" />
                     </Grid>
                     <Grid ColumnDefinitions="*,*">
                       <TextBlock Classes="sub" ui:Tr.Key="warm" FontSize="10" />

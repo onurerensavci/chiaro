@@ -68,6 +68,16 @@ public partial class MainWindow : Window
 		started = true;
 		Log("Arka planda başlatıldı (oturum açılışı).");
 		InitTray();
+		if (tray == null)
+		{
+			// Menü çubuğu simgesi kurulamadıysa görünmez bir uygulama kalmasın: pencereyi göster.
+			RestoreWindow();
+		}
+		else
+		{
+			// Yalnızca menü çubuğu simgesi: Dock simgesi gösterilmez (Program, --background ile ShowInDock=false başlatır).
+			SetDockIcon(false);
+		}
 		_ = AutoCheckUpdates();
 		await StartupConnect();
 	}
@@ -1004,10 +1014,12 @@ public partial class MainWindow : Window
 	{
 		Hide();
 		Log("Pencere menü çubuğuna gizlendi.");
+		UpdateDockIcon();
 	}
 
 	internal void RestoreWindow()
 	{
+		SetDockIcon(true);
 		Show();
 		if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
 		Activate();

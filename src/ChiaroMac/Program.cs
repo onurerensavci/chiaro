@@ -31,6 +31,8 @@ internal static class Program
 			ActivateOtherInstance();
 			return 0;
 		}
+		// Oturum açılışında (--background) yalnızca menü çubuğu simgesi: Dock simgesi hiç görünmesin (pencere açılınca gösterilir).
+		showInDock = !args.Contains(LoginItem.BackgroundArgument);
 		try
 		{
 			BuildAvaloniaApp().StartWithClassicDesktopLifetime(args, ShutdownMode.OnExplicitShutdown);
@@ -75,10 +77,12 @@ internal static class Program
 		}
 	}
 
+	private static bool showInDock = true;
+
 	public static AppBuilder BuildAvaloniaApp() =>
 		AppBuilder.Configure<App>()
 			.UsePlatformDetect()
-			.With(new MacOSPlatformOptions { ShowInDock = true })
+			.With(new MacOSPlatformOptions { ShowInDock = showInDock })
 			.With(new X11PlatformOptions { EnableIme = false })
 			.LogToTrace();
 }

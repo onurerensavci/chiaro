@@ -23,6 +23,7 @@
     <Compile Include="../ChiaroMac/Core/SingleInstance.cs" Link="Mac/SingleInstance.cs" />
     <Compile Include="../ChiaroMac/Core/Ambient.cs" Link="Mac/Ambient.cs" />
     <Compile Include="../ChiaroMac/Mac/MacSystem.cs" Link="Mac/MacSystem.cs" />
+    <Compile Include="../ChiaroMac/Mac/SelfUpdate.cs" Link="Mac/SelfUpdate.cs" />
     <Compile Include="../ChiaroMac/Compat/WpfMediaShim.cs" Link="Mac/WpfMediaShim.cs" />
     <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
   </ItemGroup>

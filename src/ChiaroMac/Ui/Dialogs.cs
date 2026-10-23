@@ -12,6 +12,9 @@ namespace HueStudio.Ui;
 /// <summary>Basit modal pencereler (bilgi, ad + emoji, emoji seçici, çoktan seçmeli).</summary>
 public static class Dialogs
 {
+	/// <summary>Son açılan iletişim penceresi (yalnızca önizleme ekran görüntüsü için).</summary>
+	internal static Window? LastShown { get; private set; }
+
 	private static Window Shell(string title, Control content, double width = 420)
 	{
 		Window w = new Window
@@ -27,6 +30,7 @@ public static class Dialogs
 		w.Classes.Add("dialog");
 		w.Bind(Window.BackgroundProperty, w.GetResourceObservable("CardBg"));
 		w.KeyDown += (_, e) => { if (e.Key == Key.Escape) w.Close(); };
+		LastShown = w;
 		return w;
 	}
 

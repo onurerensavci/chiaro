@@ -28,6 +28,14 @@ public partial class MainWindow
 	{
 		// Uygulama taşındıysa (ör. İndirilenler → Uygulamalar) oturum açılışı kaydındaki yolu düzelt.
 		if (OperatingSystem.IsMacOS()) LoginItem.Refresh();
+		// Önceki bir güncellemeden kalan hazırlık/yedek paketleri (ör. yarıda kalmış kurulum) temizle.
+		if (OperatingSystem.IsMacOS()) SelfUpdate.CleanupLeftovers(LoginItem.BundlePath());
+		// Güncelleme yardımcısının sonucu (yeniden açılıştan sonra bir kez gösterilir).
+		if (OperatingSystem.IsMacOS() && SelfUpdate.TakeStatus() is int updateStatus)
+		{
+			Log("Güncelleme yardımcısı sonucu: " + updateStatus);
+			DetailText.Text = updateStatus == 0 ? L.F("mac_upd_updated", Program.Version) : L.T("mac_upd_helper_failed");
+		}
 		AutostartBox.IsChecked = OperatingSystem.IsMacOS() && LoginItem.IsEnabled();
 		AutostartBox.IsEnabled = OperatingSystem.IsMacOS();
 		AutoUpdateBox.IsChecked = macPrefs.AutoUpdateCheck;
@@ -97,29 +105,65 @@ public partial class MainWindow
 				if (manual) DetailText.Text = L.T(status);
 				return;
 			}
-			if (!manual && macPrefs.SkippedVersion == u.Version) return;
 			string text = L.F("mac_upd_available", u.Version) + $" (v{MacUpdater.Current.ToString(3)})" + (u.Notes.Length > 0 ? "\n\n" + Trim(u.Notes, 600) : "");
-			int choice = await Dialogs.Choose(this, "Chiaro", text, L.T("mac_upd_download"), L.T("mac_upd_page"), L.T("close"));
+			// Yerinde güncellenebilir mi (paket, yazma izni, App Translocation)? Değilse eski davranış: İndirilenler'e indir.
+			string? bundle = LoginItem.BundlePath();
+			string? cannot = OperatingSystem.IsMacOS() ? SelfUpdate.CannotUpdateReason(bundle) : "mac_upd_self_no_bundle";
+			if (cannot != null) Log("Güncelleme: yerinde kurulum yok (" + cannot + ")");
+			int choice = await Dialogs.Choose(this, "Chiaro", text, L.T(cannot == null ? "mac_upd_install" : "mac_upd_download"), L.T("mac_upd_page"), L.T("mac_upd_later"));
 			if (choice == 1)
 			{
 				OpenExternal(u.PageUrl);
 				return;
 			}
-			if (choice != 0)
-			{
-				if (!manual)
-				{
-					macPrefs.SkippedVersion = u.Version;
-					macPrefs.Save();
-				}
-				return;
-			}
+			// "Şimdi değil": sürüm atlanmaz; günlük otomatik denetim ertesi gün yeniden sorar.
+			if (choice != 0) return;
 			try
 			{
 				Progress<double> p = new Progress<double>(v => DetailText.Text = $"{u.AssetName} • {L.Pct(v * 100)}");
 				using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+				if (cannot == null && bundle != null)
+				{
+					string work = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "chiaro-update-" + Guid.NewGuid().ToString("N")[..8]);
+					string zip = await MacUpdater.DownloadAsync(u, p, cts.Token, work);
+					DetailText.Text = L.T("mac_upd_installing");
+					try
+					{
+						Version want = MacUpdater.TryParse(u.Version, out Version wv) ? wv : MacUpdater.Current;
+						string staged = await Task.Run(() =>
+						{
+							string extracted = System.IO.Path.Combine(work, "x");
+							SelfUpdate.Extract(zip, extracted);
+							string app = SelfUpdate.FindAndVerifyBundle(extracted, want);
+							SelfUpdate.RemoveQuarantine(app);
+							return SelfUpdate.Stage(app, bundle);
+						});
+						System.IO.Directory.CreateDirectory(AppLog.Folder);
+						System.IO.Directory.CreateDirectory(MacUpdater.DownloadsFolder);
+						SelfUpdate.StartHelper(work, Environment.ProcessId, bundle, staged, System.IO.Path.Combine(AppLog.Folder, "update.log"), "/usr/bin/open",
+							SelfUpdate.StatusFile, zip, System.IO.Path.Combine(MacUpdater.DownloadsFolder, u.AssetName));
+						Log($"Güncelleme: v{u.Version} hazırlandı; yardımcı başlatıldı, uygulama yeniden açılacak.");
+						DetailText.Text = L.T("mac_upd_restarting");
+						await Task.Delay(600);
+						ExitApplication();
+						return;
+					}
+					catch (Exception ex)
+					{
+						// Kurulum yapılamadı: doğrulanmış zip'i İndirilenler'e taşı (eski davranış).
+						Log("Güncelleme kurulumu: " + ex);
+						SelfUpdate.CleanupLeftovers(bundle);
+						string target = System.IO.Path.Combine(MacUpdater.DownloadsFolder, u.AssetName);
+						System.IO.Directory.CreateDirectory(MacUpdater.DownloadsFolder);
+						System.IO.File.Move(zip, target, overwrite: true);
+						try { System.IO.Directory.Delete(work, recursive: true); } catch (Exception) { }
+						DetailText.Text = L.F("mac_upd_self_failed", L.Message(ex.Message)) + "\n" + L.F("mac_upd_done", u.AssetName);
+						if (OperatingSystem.IsMacOS()) StartProcess("/usr/bin/open", "-R", target);
+						return;
+					}
+				}
 				string path = await MacUpdater.DownloadAsync(u, p, cts.Token);
-				DetailText.Text = L.F("mac_upd_done", System.IO.Path.GetFileName(path));
+				DetailText.Text = (cannot != null && OperatingSystem.IsMacOS() ? L.T(cannot) + "\n" : "") + L.F("mac_upd_done", System.IO.Path.GetFileName(path));
 				if (OperatingSystem.IsMacOS()) StartProcess("/usr/bin/open", "-R", path);
 			}
 			catch (Exception ex)
@@ -153,8 +197,38 @@ public partial class MainWindow
 
 	private void Mini_Click(object? sender, RoutedEventArgs e) => ShowMini();
 
+	// =====================================================================
+	//  Dock simgesi: yalnız menü çubuğu simgesi görünürken gizli (Accessory), bir pencere açıkken görünür (Regular)
+	// =====================================================================
+
+	/// <summary>Ana pencere ya da mini çubuk görünürse Dock simgesi (ve ⌘Q'lu uygulama menüsü) gösterilir.</summary>
+	private void UpdateDockIcon() => SetDockIcon(IsVisible || mini?.IsVisible == true || tray == null);
+
+	/// <summary>NSApplicationActivationPolicy: 0 Regular (Dock + menü), 1 Accessory (yalnız menü çubuğu simgesi).</summary>
+	internal static void SetDockIcon(bool visible)
+	{
+		if (!OperatingSystem.IsMacOS()) return;
+		try
+		{
+			MacInterop.Native.Load(MacInterop.Native.AppKit);
+			IntPtr app = MacInterop.Objc.Send(MacInterop.Objc.Cls("NSApplication"), MacInterop.Objc.Sel("sharedApplication"));
+			if (app == IntPtr.Zero) return;
+			nint want = visible ? 0 : 1;
+			if (MacInterop.Objc.SendNInt(app, MacInterop.Objc.Sel("activationPolicy")) == want) return;
+			MacInterop.Native.SendNIntArg(app, MacInterop.Objc.Sel("setActivationPolicy:"), want);
+			// Accessory → Regular sonrası uygulama öne gelmezse pencere ve menü çubuğu arkada kalır.
+			if (visible) MacInterop.Objc.SendBool(app, MacInterop.Objc.Sel("activateIgnoringOtherApps:"), 1);
+			AppLog.Write("Dock simgesi: " + (visible ? "görünür" : "gizli"));
+		}
+		catch (Exception ex)
+		{
+			AppLog.Write("Dock simgesi ayarlanamadı: " + ex.Message);
+		}
+	}
+
 	internal void ShowMini()
 	{
+		SetDockIcon(true);
 		if (mini == null) BuildMini();
 		RefreshMini();
 		mini!.Show();

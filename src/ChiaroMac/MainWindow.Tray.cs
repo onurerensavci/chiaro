@@ -197,6 +197,9 @@ public partial class MainWindow
 				case "sleep": StartSleepTimer(30); break;
 				case "program": if (settings.Schedules.Count == 0) { settings.Schedules.Add(new ScheduleItem { Time = "23:30" }); settings.Schedules.Add(new ScheduleItem { Time = "18:30", Action = "Sahne", SceneId = "okuma" }); RebuildSchedules(); } break;
 				case "wake": settings.Wake.Enabled = true; WakeEnabled.IsChecked = true; UpdateTimerUi(); break;
+				case "upddialog": _ = HueStudio.Ui.Dialogs.Choose(this, "Chiaro", L.F("mac_upd_available", "3.5") + " (v3.4.0)", L.T("mac_upd_install"), L.T("mac_upd_page"), L.T("mac_upd_later")); break;
+				case "updfail": DetailText.Text = L.T("mac_upd_helper_failed"); break;
+				case "updok": DetailText.Text = L.F("mac_upd_updated", "3.5.0"); break;
 			}
 			await Task.Delay(400);
 		}
@@ -205,7 +208,7 @@ public partial class MainWindow
 		await Task.Delay(500);
 		try
 		{
-			Window target = mini is { IsVisible: true } ? mini : this;
+			Window target = HueStudio.Ui.Dialogs.LastShown is { IsVisible: true } dlg ? dlg : mini is { IsVisible: true } ? mini : this;
 			PixelSize size = new PixelSize((int)target.Bounds.Width, (int)target.Bounds.Height);
 			using RenderTargetBitmap bmp = new RenderTargetBitmap(size, new Vector(96, 96));
 			bmp.Render(target);

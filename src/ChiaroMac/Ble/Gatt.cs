@@ -146,3 +146,43 @@ public static class BleUuid
 		return s.ToUpperInvariant();
 	}
 }
+
+/// <summary>
+/// Bir kontrol (characteristic) için bekleyen okuma/yazma isteklerini sırayla eşler. CoreBluetooth yanıtlı yazma ve okuma
+/// geri çağrılarını istek sırasıyla verir; bu yüzden her yanıt kuyruğun başındaki isteğe aittir. Zaman aşımına uğrayıp
+/// bırakılan bir isteğin geç yanıtı, kendi (artık kimsenin beklemediği) kaydını tamamlar; sonraki isteği erken bitirmez.
+/// İş parçacığı güvenli değildir: yalnızca BLE kuyruğunda kullanılır.
+/// </summary>
+public sealed class PendingOps<T>
+{
+	private readonly Dictionary<Guid, Queue<TaskCompletionSource<T>>> map = new Dictionary<Guid, Queue<TaskCompletionSource<T>>>();
+
+	public TaskCompletionSource<T> Add(Guid key)
+	{
+		TaskCompletionSource<T> tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+		if (!map.TryGetValue(key, out Queue<TaskCompletionSource<T>>? q)) map[key] = q = new Queue<TaskCompletionSource<T>>();
+		q.Enqueue(tcs);
+		return tcs;
+	}
+
+	/// <summary>Gelen yanıtın sahibini (en eski bekleyen isteği) çıkarır; istenmemiş bir yanıtsa (ör. bildirim) false.</summary>
+	public bool TakeOldest(Guid key, out TaskCompletionSource<T> tcs)
+	{
+		tcs = null!;
+		if (!map.TryGetValue(key, out Queue<TaskCompletionSource<T>>? q) || q.Count == 0) return false;
+		tcs = q.Dequeue();
+		if (q.Count == 0) map.Remove(key);
+		return true;
+	}
+
+	public int Count(Guid key) => map.TryGetValue(key, out Queue<TaskCompletionSource<T>>? q) ? q.Count : 0;
+
+	public void FailAll(Exception ex)
+	{
+		foreach (Queue<TaskCompletionSource<T>> q in map.Values)
+		{
+			foreach (TaskCompletionSource<T> t in q) t.TrySetException(ex);
+		}
+		map.Clear();
+	}
+}

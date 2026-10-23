@@ -18,7 +18,7 @@ namespace HueStudio;
 public sealed class CoreBluetoothBackend : IGattBackend
 {
 	private const nint StateUnknown = 0, StateResetting = 1, StateUnsupported = 2, StateUnauthorized = 3, StatePoweredOff = 4, StatePoweredOn = 5;
-	private const nint PeripheralConnected = 2;
+	private const nint PeripheralConnecting = 1, PeripheralConnected = 2, PeripheralDisconnecting = 3;
 
 	private static CoreBluetoothBackend? instance;
 	private static IntPtr delegateClass;
@@ -39,6 +39,12 @@ public sealed class CoreBluetoothBackend : IGattBackend
 	/// ampule yeniden bağlanılırsa, eski bağlantının kapanma bildirimi yeni bağlantıyı düşürmesin diye beklenir/yutulur.
 	/// </summary>
 	private readonly Dictionary<IntPtr, TaskCompletionSource> cancelling = new Dictionary<IntPtr, TaskCompletionSource>();
+	/// <summary>
+	/// Henüz bağlanmamış (bekleyen) bir bağlantı isteği iptal edildi. macOS bunun için çoğu zaman hiçbir bildirim göndermez;
+	/// bu yüzden yeni bağlantı beklemez. Yine de kısa süre içinde gecikmiş bir didFail/didDisconnect gelirse ve yeni
+	/// bağlantı henüz kurulmamışsa yutulur (bağlanmamış bir bağlantı "kopamaz").
+	/// </summary>
+	private readonly Dictionary<IntPtr, long> pendingCancelled = new Dictionary<IntPtr, long>();
 
 	public string Name => "CoreBluetooth";
 
@@ -284,10 +290,31 @@ public sealed class CoreBluetoothBackend : IGattBackend
 			// Yalnızca bu bağlantıya aitse kaldır (aynı ampule yeni bir bağlantı kaydedilmiş olabilir).
 			if (active.TryGetValue(p, out MacPeripheral? cur) && ReferenceEquals(cur, owner)) active.Remove(p);
 			else if (active.ContainsKey(p)) return;
-			// 0 = bağlı değil: kapanma bildirimi gelmez. Diğer durumlarda didDisconnectPeripheral yankısı beklenir.
-			if (SendNInt(p, Sel("state")) != 0 && !cancelling.ContainsKey(p)) cancelling[p] = NewTcs();
+			// CBPeripheralState: 0 bağlı değil, 1 bağlanıyor, 2 bağlı, 3 kopuyor. Yalnızca bağlı/kopan bir bağlantı
+			// didDisconnectPeripheral yankısı verir; bekleyen (1) bir istek için macOS genelde sessiz kalır, beklemeye gerek yok.
+			nint st = SendNInt(p, Sel("state"));
+			if (st is PeripheralConnected or PeripheralDisconnecting)
+			{
+				if (!cancelling.ContainsKey(p)) cancelling[p] = NewTcs();
+			}
+			else if (st == PeripheralConnecting)
+			{
+				pendingCancelled[p] = Environment.TickCount64;
+			}
 			SendVoid(central, Sel("cancelPeripheralConnection:"), p);
 		});
+	}
+
+	/// <summary>
+	/// Kuyrukta çağrılır. İptal edilmiş bekleyen bir isteğin gecikmiş bildirimi mi? Yalnızca 5 sn içinde ve aynı ampulün yeni
+	/// bağlantısı henüz kurulmamışsa true (kurulmuş bir bağlantının kopması gerçektir ve bildirilir).
+	/// </summary>
+	private bool TakePendingCancelEcho(IntPtr p)
+	{
+		if (!pendingCancelled.Remove(p, out long at)) return false;
+		if (Environment.TickCount64 - at > 5000) return false;
+		MacPeripheral? mp = Find(p);
+		return mp == null || !mp.Connected.Task.IsCompletedSuccessfully;
 	}
 
 	/// <summary>Kuyrukta çağrılır. Bu kapanma, bizim iptal ettiğimiz bir bağlantının yankısıysa true.</summary>
@@ -343,6 +370,7 @@ public sealed class CoreBluetoothBackend : IGattBackend
 			foreach (MacPeripheral mp in b.active.Values.ToList()) mp.OnDisconnected("Bluetooth " + StateName(s));
 			// Bluetooth kapandı/sıfırlandı: bekleyen iptal yankıları artık gelmez.
 			foreach (IntPtr p in b.cancelling.Keys.ToList()) b.TakeCancelEcho(p);
+			b.pendingCancelled.Clear();
 		}
 	});
 
@@ -370,6 +398,7 @@ public sealed class CoreBluetoothBackend : IGattBackend
 	[UnmanagedCallersOnly]
 	private static void DidConnect(IntPtr self, IntPtr cmd, IntPtr centralManager, IntPtr peripheral) => Guard("connect", () =>
 	{
+		instance?.pendingCancelled.Remove(peripheral);
 		Find(peripheral)?.Connected.TrySetResult();
 	});
 
@@ -379,6 +408,11 @@ public sealed class CoreBluetoothBackend : IGattBackend
 		var e = Error(error);
 		instance?.log($"CoreBluetooth: bağlantı başarısız: {e.Domain} {e.Code} {e.Description}");
 		if (instance != null && instance.TakeCancelEcho(peripheral)) return;
+		if (instance != null && instance.TakePendingCancelEcho(peripheral))
+		{
+			instance.log("CoreBluetooth: iptal edilen eski bağlantı isteğinin bildirimi yok sayıldı");
+			return;
+		}
 		Find(peripheral)?.Connected.TrySetException(GattException.FromNSError(e.Domain ?? "CBErrorDomain", e.Domain == null ? 10 : e.Code, e.Description));
 	});
 
@@ -389,6 +423,11 @@ public sealed class CoreBluetoothBackend : IGattBackend
 		if (instance != null && instance.TakeCancelEcho(peripheral))
 		{
 			instance.log("CoreBluetooth: bağlantı kapatıldı (istekle)");
+			return;
+		}
+		if (instance != null && instance.TakePendingCancelEcho(peripheral))
+		{
+			instance.log("CoreBluetooth: iptal edilen eski bağlantı isteğinin kapanışı yok sayıldı");
 			return;
 		}
 		instance?.log($"CoreBluetooth: bağlantı koptu: {e.Domain} {e.Code} {e.Description}");
@@ -432,8 +471,9 @@ internal sealed class MacPeripheral : IGattPeripheral
 	private readonly Dictionary<(Guid, Guid), IntPtr> chars = new Dictionary<(Guid, Guid), IntPtr>();
 	private TaskCompletionSource<bool>? servicesTcs;
 	private readonly Dictionary<Guid, TaskCompletionSource<bool>> charsTcs = new Dictionary<Guid, TaskCompletionSource<bool>>();
-	private readonly Dictionary<Guid, TaskCompletionSource<byte[]>> readTcs = new Dictionary<Guid, TaskCompletionSource<byte[]>>();
-	private readonly Dictionary<Guid, TaskCompletionSource<bool>> writeTcs = new Dictionary<Guid, TaskCompletionSource<bool>>();
+	// Okuma/yazma yanıtları istek sırasıyla eşlenir: zaman aşımına uğramış bir yazmanın geç yanıtı sonrakini erken bitirmez.
+	private readonly PendingOps<byte[]> reads = new PendingOps<byte[]>();
+	private readonly PendingOps<bool> writes = new PendingOps<bool>();
 	private bool disposed;
 	private bool lost;
 
@@ -514,13 +554,13 @@ internal sealed class MacPeripheral : IGattPeripheral
 
 	public async Task<byte[]> ReadAsync(Guid service, Guid characteristic, CancellationToken ct)
 	{
-		TaskCompletionSource<byte[]> tcs = New<byte[]>();
-		owner.Queue.Run(() =>
+		TaskCompletionSource<byte[]> tcs = owner.Queue.Run(() =>
 		{
 			EnsureConnected();
 			if (!chars.TryGetValue((service, characteristic), out IntPtr c)) throw new GattException(GattFailure.Unsupported, "Kontrol yok: " + characteristic);
-			readTcs[characteristic] = tcs;
+			TaskCompletionSource<byte[]> t = reads.Add(characteristic);
 			Objc.SendVoid(peripheral, Objc.Sel("readValueForCharacteristic:"), c);
+			return t;
 		});
 		// İlk şifreli okumada macOS eşleştirme penceresi açabilir: kullanıcıya zaman tanı.
 		return await Await(tcs, 45, "Okuma", ct);
@@ -528,14 +568,15 @@ internal sealed class MacPeripheral : IGattPeripheral
 
 	public async Task WriteAsync(Guid service, Guid characteristic, byte[] data, CancellationToken ct)
 	{
-		TaskCompletionSource<bool> tcs = New<bool>();
-		owner.Queue.Run(() =>
+		TaskCompletionSource<bool> tcs = owner.Queue.Run(() =>
 		{
 			EnsureConnected();
 			if (!chars.TryGetValue((service, characteristic), out IntPtr c)) throw new GattException(GattFailure.Unsupported, "Kontrol yok: " + characteristic);
-			writeTcs[characteristic] = tcs;
+			IntPtr payload = Objc.NSData(data);
+			TaskCompletionSource<bool> t = writes.Add(characteristic);
 			// CBCharacteristicWriteWithResponse = 0 (Windows'taki WriteWithResponse ile aynı)
-			Objc.SendVoidWrite(peripheral, Objc.Sel("writeValue:forCharacteristic:type:"), Objc.NSData(data), c, 0);
+			Objc.SendVoidWrite(peripheral, Objc.Sel("writeValue:forCharacteristic:type:"), payload, c, 0);
+			return t;
 		});
 		await Await(tcs, 15, "Yazma", ct);
 	}
@@ -576,7 +617,7 @@ internal sealed class MacPeripheral : IGattPeripheral
 	internal void OnRead(IntPtr characteristic, IntPtr error)
 	{
 		Guid cid = CoreBluetoothBackend.FromCBUUID(Objc.Send(characteristic, Objc.Sel("UUID")));
-		if (!readTcs.Remove(cid, out TaskCompletionSource<byte[]>? tcs)) return; // bildirim; kullanılmıyor
+		if (!reads.TakeOldest(cid, out TaskCompletionSource<byte[]> tcs)) return; // bildirim; kullanılmıyor
 		if (Fail(error) is GattException ex) { tcs.TrySetException(ex); return; }
 		tcs.TrySetResult(Objc.Bytes(Objc.Send(characteristic, Objc.Sel("value"))));
 	}
@@ -584,7 +625,7 @@ internal sealed class MacPeripheral : IGattPeripheral
 	internal void OnWrite(IntPtr characteristic, IntPtr error)
 	{
 		Guid cid = CoreBluetoothBackend.FromCBUUID(Objc.Send(characteristic, Objc.Sel("UUID")));
-		if (!writeTcs.Remove(cid, out TaskCompletionSource<bool>? tcs)) return;
+		if (!writes.TakeOldest(cid, out TaskCompletionSource<bool> tcs)) return;
 		if (Fail(error) is GattException ex) { tcs.TrySetException(ex); return; }
 		tcs.TrySetResult(true);
 	}
@@ -596,11 +637,9 @@ internal sealed class MacPeripheral : IGattPeripheral
 		GattException ex = error ?? new GattException(GattFailure.NotConnected, "Bağlantı koptu." + (reason != null ? " " + reason : ""));
 		servicesTcs?.TrySetException(ex);
 		foreach (var t in charsTcs.Values) t.TrySetException(ex);
-		foreach (var t in readTcs.Values) t.TrySetException(ex);
-		foreach (var t in writeTcs.Values) t.TrySetException(ex);
+		reads.FailAll(ex);
+		writes.FailAll(ex);
 		charsTcs.Clear();
-		readTcs.Clear();
-		writeTcs.Clear();
 		services.Clear();
 		chars.Clear();
 		Action<string?>? h = Disconnected;

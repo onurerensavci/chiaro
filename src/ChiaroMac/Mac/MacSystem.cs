@@ -185,7 +185,8 @@ public sealed record MacUpdate(string Version, string Tag, string AssetName, str
 
 /// <summary>
 /// GitHub Releases'te Mac paketi arar: Chiaro_vX.Y[.Z]_mac.zip. Yalnızca .exe olan sürümler Mac için "güncelleme yok" sayılır.
-/// Bulunursa zip İndirilenler'e indirilir, SHA-256 doğrulanır ve Finder'da gösterilir (uygulama kendini değiştirmez).
+/// Bulunursa zip indirilir ve SHA-256 doğrulanır; uygulama yazılabilir bir konumdaysa SelfUpdate ile kendini değiştirir,
+/// değilse zip İndirilenler'de bırakılır ve Finder'da gösterilir.
 /// </summary>
 public static class MacUpdater
 {
@@ -270,10 +271,12 @@ public static class MacUpdater
 		return Evaluate(await resp.Content.ReadAsStringAsync(ct), Current);
 	}
 
-	/// <summary>Zip'i İndirilenler'e indirir ve doğrular; dosya yolunu döndürür.</summary>
-	public static async Task<string> DownloadAsync(MacUpdate u, IProgress<double>? progress, CancellationToken ct)
+	public static string DownloadsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+
+	/// <summary>Zip'i (varsayılan: İndirilenler'e) indirir ve SHA-256 ile doğrular; dosya yolunu döndürür.</summary>
+	public static async Task<string> DownloadAsync(MacUpdate u, IProgress<double>? progress, CancellationToken ct, string? folder = null)
 	{
-		string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+		string dir = folder ?? DownloadsFolder;
 		Directory.CreateDirectory(dir);
 		string target = Path.Combine(dir, u.AssetName);
 		string temp = target + ".part";
