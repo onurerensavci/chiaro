@@ -891,9 +891,75 @@ public partial class MainWindow
 	/// <summary>Duman testi: ana pencereye bağlı hızlı panel (dil değişince yenilenir).</summary>
 	internal Window QuickPanelForTest() => quick = new QuickPanel(this);
 
-	internal FrameworkElement GeneralCardElement => (FrameworkElement)((FrameworkElement)GeneralBody.Parent).Parent;
+	internal FrameworkElement SettingsCardElement => (FrameworkElement)((FrameworkElement)SettingsBody.Parent).Parent;
 
 	internal void SetSectionForTest(string key, bool expanded) => SetSectionState(key, expanded, animate: false);
+
+	internal void SetStartupForTest(bool on)
+	{
+		AutoStartBox.IsChecked = on;
+		UpdateLightOnStartupBox();
+	}
+
+	/// <summary>Duman testi: "Ayarlar" kartı başlığı ve "Bilgisayar açılınca ışığı aç" seçeneği (kayıt/başlangıç kaydı değiştirilmez).</summary>
+	internal string SettingsCardCheck()
+	{
+		void Check(bool ok, string what)
+		{
+			if (!ok) throw new InvalidOperationException("Settings card: " + what);
+		}
+		string title = SettingsTitle.Text;
+		Check(title == L.T("settings_title") && title == (L.Lang == L.English ? "Settings" : "Ayarlar"), "title is " + title);
+		Check(!Strings.Tr.ContainsKey("general") && !Strings.En.ContainsKey("general"), "old 'general' key still present");
+		Check(!Strings.Tr.Values.Any(v => v == "Genel") && !Strings.En.Values.Any(v => v == "General"), "old label still present");
+		Check((LightOnStartupBox.Content as string) == (L.Lang == L.English ? "Turn on light at startup" : "Bilgisayar açılınca ışığı aç"), "checkbox label " + LightOnStartupBox.Content);
+		SettingsBody.UpdateLayout();
+		int iAuto = SettingsBody.Children.IndexOf(AutoStartBox), iLight = SettingsBody.Children.IndexOf(LightOnStartupBox);
+		Check(iLight == iAuto + 1, "checkbox must sit right under the startup checkbox");
+		Check(!new StudioSettings().LightOnStartup, "default must be off");
+		StudioSettings rt = System.Text.Json.JsonSerializer.Deserialize<StudioSettings>(System.Text.Json.JsonSerializer.Serialize(new StudioSettings { LightOnStartup = true }))!;
+		Check(rt.LightOnStartup, "setting must persist (JSON roundtrip)");
+		Check(System.Text.Json.JsonSerializer.Deserialize<StudioSettings>("{\"AutoStart\":true}")!.LightOnStartup == false, "old settings file -> off");
+		bool savedAuto = AutoStartBox.IsChecked == true, savedOpt = settings.LightOnStartup;
+		try
+		{
+			AutoStartBox.IsChecked = true;
+			UpdateLightOnStartupBox();
+			Check(LightOnStartupBox.IsEnabled && (LightOnStartupBox.ToolTip as string) == L.T("light_on_startup_tip"), "enabled when startup on");
+			AutoStartBox.IsChecked = false;
+			UpdateLightOnStartupBox();
+			Check(!LightOnStartupBox.IsEnabled && LightOnStartupBox.Visibility == Visibility.Visible && (LightOnStartupBox.ToolTip as string) == L.T("light_on_startup_needs"), "visible but disabled with tip when startup off");
+			Check(ToolTipService.GetShowOnDisabled(LightOnStartupBox), "tooltip must show while disabled");
+			// Başlangıç kapalıyken işaretlenirse: seçenek açılmaz, başlangıç da sessizce açılmaz.
+			LightOnStartupBox.IsChecked = true;
+			LightOnStartup_Click(LightOnStartupBox, new RoutedEventArgs());
+			Check(!settings.LightOnStartup && LightOnStartupBox.IsChecked == false && AutoStartBox.IsChecked == false && DetailText.Text == L.T("light_on_startup_needs"), "ticking while startup off must require startup first");
+		}
+		finally
+		{
+			AutoStartBox.IsChecked = savedAuto;
+			settings.LightOnStartup = savedOpt;
+			UpdateLightOnStartupBox();
+		}
+		// Algılama ve yeniden deneme planı
+		Check(StartupLight.ShouldRun(true, true, true) && !StartupLight.ShouldRun(false, true, true) && !StartupLight.ShouldRun(true, false, true) && !StartupLight.ShouldRun(true, true, false), "only autostart launch + option + startup");
+		Check(AutoStart.IsTrayLaunch(new[] { "--tray" }) && !AutoStart.IsTrayLaunch(Array.Empty<string>()) && !AutoStart.IsTrayLaunch(new[] { Updater.UpdatedArgument }), "--tray = autostart; manual / --updated are not");
+		Check(AutoStart.Command.EndsWith(" " + AutoStart.TrayArgument), "Run key command carries --tray");
+		TimeSpan t = TimeSpan.Zero;
+		int tries = 1;
+		List<double> waits = new List<double>();
+		while (StartupLight.NextDelay(tries - 1, t) is TimeSpan d)
+		{
+			waits.Add(d.TotalSeconds);
+			t += d + TimeSpan.FromSeconds(1); // her deneme ~1 sn sürsün
+			tries++;
+		}
+		Check(tries >= 5 && t <= StartupLight.Window + TimeSpan.FromSeconds(1) && waits[0] < waits[1] && waits[1] < waits[2], "backoff schedule " + string.Join(",", waits));
+		Check(StartupLight.SkipReason(false, "", false) == null && StartupLight.SkipReason(false, "", null) == null, "power on when off/unknown");
+		Check(StartupLight.SkipReason(false, "Ekran", false) != null && StartupLight.SkipReason(false, "", true) != null && StartupLight.SkipReason(true, "", false) != null, "skip when mode running / already on / user acted");
+		return $"\nSettings card: title \"{title}\" (no 'Genel/General' left), \"{LightOnStartupBox.Content}\" right under startup, default off, persisted, disabled+tip when startup off, ticking needs startup first; "
+			+ $"autostart detection (--tray only), backoff {string.Join("/", waits)} s = {tries} tries within {StartupLight.Window.TotalSeconds:F0} s, no power-on over a running mode: PASS.";
+	}
 
 	/// <summary>Oyun sahnesinin mod ayarları gerçekten uygulanıyor mu (50 ms + parlaklık ekrana uysun)?</summary>
 	internal string TestOyunScene()

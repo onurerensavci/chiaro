@@ -228,10 +228,10 @@
               </StackPanel>
             </Border>
 
-            <!-- Genel -->
+            <!-- Ayarlar -->
             <Border Classes="card">
               <StackPanel Spacing="10">
-                <TextBlock Classes="h1" ui:Tr.Key="general" />
+                <TextBlock Classes="h1" x:Name="SettingsTitle" ui:Tr.Key="settings_title" />
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Classes="label" ui:Tr.Key="language_label" />
                   <ComboBox Grid.Column="1" x:Name="LanguageBox" Width="170" SelectionChanged="Language_Changed">
@@ -245,6 +245,7 @@
                   <Button Grid.Column="1" Classes="pill" x:Name="ThemeButton2" Width="170" Click="Theme_Click" />
                 </Grid>
                 <CheckBox x:Name="AutostartBox" ui:Tr.Key="autostart" ui:Tr.Tip="autostart_tip" Click="Autostart_Click" />
+                <CheckBox x:Name="LightOnStartupBox" ui:Tr.Key="light_on_startup" Margin="26,0,0,0" ToolTip.ShowOnDisabled="True" Click="LightOnStartup_Click" />
                 <CheckBox x:Name="AutoUpdateBox" ui:Tr.Key="mac_upd_auto" Click="AutoUpdate_Click" />
                 <WrapPanel>
                   <Button Classes="pill" Margin="0,0,6,6" ui:Tr.Key="help" Click="Help_Click" />

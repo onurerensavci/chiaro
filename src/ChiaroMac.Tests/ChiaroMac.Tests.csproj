@@ -26,6 +26,7 @@
     <Compile Include="../ChiaroMac/Mac/SelfUpdate.cs" Link="Mac/SelfUpdate.cs" />
     <Compile Include="../ChiaroMac/Compat/WpfMediaShim.cs" Link="Mac/WpfMediaShim.cs" />
     <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
+    <Compile Include="../Chiaro/Core/StartupLight.cs" Link="Shared/StartupLight.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

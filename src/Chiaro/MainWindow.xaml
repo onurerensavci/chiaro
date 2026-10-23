@@ -296,15 +296,16 @@
               </StackPanel>
             </ContentControl>
 
-            <!-- Genel -->
+            <!-- Ayarlar (bölüm kimliği "general" kayıtlı ayarlarla uyum için aynı kalır) -->
             <ContentControl Style="{StaticResource GlassCard}" Margin="0,0,0,14">
               <StackPanel>
                 <DockPanel>
-                  <Button x:Name="GeneralChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="general" Click="Section_Click" />
-                  <Button Style="{StaticResource HeaderButton}" Tag="general" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock Text="{l:T general}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
+                  <Button x:Name="SettingsChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="general" Click="Section_Click" />
+                  <Button Style="{StaticResource HeaderButton}" Tag="general" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock x:Name="SettingsTitle" Text="{l:T settings_title}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
                 </DockPanel>
-                <StackPanel x:Name="GeneralBody" Margin="0,6,0,0">
+                <StackPanel x:Name="SettingsBody" Margin="0,6,0,0">
                 <CheckBox x:Name="AutoStartBox" Content="{l:T autostart}" ToolTip="{l:T autostart_tip}" Click="AutoStart_Click" />
+                <CheckBox x:Name="LightOnStartupBox" Content="{l:T light_on_startup}" Margin="26,2,0,6" ToolTipService.ShowOnDisabled="True" Click="LightOnStartup_Click" />
                 <CheckBox x:Name="AnimBox" Content="{l:T animations}" Click="Anim_Click" />
                 <CheckBox x:Name="WheelBox" Content="{l:T tray_wheel}" ToolTip="{l:T tray_wheel_tip}" Click="WheelBox_Click" />
                 <TextBlock x:Name="WheelHint" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="30,0,0,0" />
