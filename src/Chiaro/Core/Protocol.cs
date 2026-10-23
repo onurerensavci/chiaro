@@ -94,9 +94,18 @@ public static class Protocol
 		int num = BinaryPrimitives.ReadUInt16LittleEndian(data);
 		if (num != 0 && num != 65535)
 		{
-			return (int)Math.Round(1000000.0 / (double)num);
+			return SnapKelvin(1000000.0 / (double)num);
 		}
 		return null;
+	}
+
+	/// <summary>
+	/// Ampul beyaz tonunu tamsayı mired olarak saklar; 1e6/mired geri dönüşü 3000 K yerine 3003 K gibi değerler verir.
+	/// Gösterim ve kaydırıcı için en yakın 50 K'ya yuvarlanır (2200 → 455 mired → 2198 → 2200).
+	/// </summary>
+	public static int SnapKelvin(double kelvin)
+	{
+		return (int)(Math.Round(kelvin / 50.0, MidpointRounding.AwayFromZero) * 50.0);
 	}
 
 	public static bool HasFe0fServiceData(byte[] bytes)
