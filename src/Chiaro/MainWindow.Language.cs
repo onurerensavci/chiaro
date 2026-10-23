@@ -62,6 +62,7 @@ public partial class MainWindow
 	{
 		if (closed) return;
 		FillLanguageBox();
+		UpdateLightOnStartupBox();
 
 		// Seçenek listeleri: seçimleri koru (SelectedIndex bağları ayarlara yazar).
 		Refill(ScreenArea, ScreenSampler.AreaNames);

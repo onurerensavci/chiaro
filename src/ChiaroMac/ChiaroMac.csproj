@@ -13,10 +13,10 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);CHIARO_MAC</DefineConstants>
-    <Version>3.5.0</Version>
-    <InformationalVersion>3.5.0</InformationalVersion>
-    <AssemblyVersion>3.5.0.0</AssemblyVersion>
-    <FileVersion>3.5.0.0</FileVersion>
+    <Version>3.6.0</Version>
+    <InformationalVersion>3.6.0</InformationalVersion>
+    <AssemblyVersion>3.6.0.0</AssemblyVersion>
+    <FileVersion>3.6.0.0</FileVersion>
     <Product>Chiaro</Product>
     <Company>Chiaro</Company>
     <AssemblyTitle>Chiaro</AssemblyTitle>
@@ -42,6 +42,7 @@
     <Compile Include="../Chiaro/Core/StudioSettings.cs" Link="Shared/StudioSettings.cs" />
     <Compile Include="../Chiaro/Core/Scenes.cs" Link="Shared/Scenes.cs" />
     <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
+    <Compile Include="../Chiaro/Core/StartupLight.cs" Link="Shared/StartupLight.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,5 +53,9 @@
     <PackageReference Include="Avalonia" Version="11.3.22" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+  </ItemGroup>
+  <!-- Deneme yapısı etiketi: ChiaroTestTag=test1 dotnet publish … (yayın yapısında boş bırakılır). -->
+  <ItemGroup Condition="'$(ChiaroTestTag)' != ''">
+    <AssemblyMetadata Include="ChiaroTestTag" Value="$(ChiaroTestTag)" />
   </ItemGroup>
 </Project>

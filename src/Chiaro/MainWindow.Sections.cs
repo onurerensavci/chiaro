@@ -23,7 +23,7 @@ public partial class MainWindow
 		Reg("device", DeviceBody, DeviceChev);
 		Reg("bulb", BulbBody, BulbChev);
 		Reg("colors", ColorsBody, ColorsChev);
-		Reg("general", GeneralBody, GeneralChev);
+		Reg("general", SettingsBody, SettingsChev);
 		Reg("scenes", ScenesBody, ScenesChev);
 		Reg("modes", ModesBody, ModesChev);
 		if (settings.Sections.TryGetValue("studio", out bool studio))

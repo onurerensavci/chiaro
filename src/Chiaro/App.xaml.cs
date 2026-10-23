@@ -408,7 +408,11 @@ public partial class App : Application
 		string result = LocalizationSelfTest.DictionaryCheck() + LocalizationSelfTest.DetectionCheck();
 		window.ShowTabForTest("Ekran");
 		window.ApplyDemoControls();
-		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.GeneralCardElement, Path.Combine(folder, "12-ayarlar-dil.png")));
+		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-dil.png")));
+		string settingsTr = window.SettingsCardCheck();
+		window.SetStartupForTest(false);
+		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-baslangic-kapali.png")));
+		window.SetStartupForTest(true);
 		// Paneller Türkçe açıkken dil değişir: canlı yenilenmeleri gerekir.
 		Window quick = window.QuickPanelForTest();
 		window.MiniBarForTest("Modlar");
@@ -433,13 +437,15 @@ public partial class App : Application
 		quick.Close();
 		result += "\nLive switch Türkçe -> English (no restart): main window, quick panel, mini mode, tray menu, update dialog, emoji picker, built-in scenes have no Turkish text left: PASS.";
 
+		string settingsEn = window.SettingsCardCheck();
+		result += settingsTr.Replace(": PASS.", "") + (settingsEn.Contains("title \"Settings\"") ? "; English: title \"Settings\", \"Turn on light at startup\": PASS." : throw new InvalidOperationException("English settings card"));
 		window.SetUpdateForTest(null);
 		await RenderContent(window, Path.Combine(folder, "1-ana-pencere-en.png"), 1240, 1000,
 			(window.SceneCardElement, Path.Combine(folder, "2-sahneler-karti-en.png")),
 			(window.HeaderElement, Path.Combine(folder, "10-guncellemeleri-denetle-en.png")));
 		await RenderContent(window, Path.Combine(folder, "0-tam-sayfa-en.png"), 1240, 0,
 			(window.ModesCardElement, Path.Combine(folder, "4-modlar-karti-en.png")),
-			(window.GeneralCardElement, Path.Combine(folder, "12-ayarlar-dil-en.png")));
+			(window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-dil-en.png")));
 		window.ApplyTheme(dark: false);
 		window.ApplyDemoControls();
 		await RenderContent(window, Path.Combine(folder, "6-acik-tema-en.png"), 1240, 1000);

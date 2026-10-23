@@ -48,7 +48,7 @@ Bu, benim bu türdeki ilk projem; fikirden tasarıma her adımını **Grok Bot**
 - 📌 **Mini mod**: her zaman üstte duran ince çubuk. Modlar ve Sahneler sekmeleriyle açılır kompakt panel.
 - 🎨 **45 hazır renk + renk çarkı**, HEX girişi ve favori renkler.
 - 🔄 **Uygulama içi güncelleme**: yeni sürüm çıkınca başlıkta **Güncelle** düğmesi ve hızlı panelde küçük bir uyarı belirir. Sürüm notlarına bak, tek tıkla indir; dosya doğrulanır, uygulama kendini yeniler ve yeniden açılır. İstersen **Güncellemeleri denetle** ile elle de bakabilirsin.
-- 🌍 **Türkçe ve İngilizce**: arayüz sistem diline göre Türkçe ya da İngilizce açılır; **Genel → Dil / Language** ile değiştir, yeniden başlatmadan anında uygulanır.
+- 🌍 **Türkçe ve İngilizce**: arayüz sistem diline göre Türkçe ya da İngilizce açılır; **Ayarlar → Dil / Language** ile değiştir, yeniden başlatmadan anında uygulanır.
 - 🚀 **Windows ile başlat**: açılışta sessizce saat yanında başlar. Mac'te **Oturum açılışında başlat** ile yalnızca menü çubuğunda başlar.
 - 🍎 **macOS (Apple Silicon)**: aynı arayüz Mac'te de var: sahneler, Ekran, Ses (sistem sesi ya da mikrofon), Spotify / Müzik, Gökkuşağı, Şömine, Gün ışığı, zamanlayıcı, menü çubuğu simgesi, mini mod ve uygulama içi güncelleme.
 

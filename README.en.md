@@ -48,7 +48,7 @@ This is my first project of its kind; I built every step of it, from the idea to
 - 📌 **Mini mode**: a slim always-on-top bar, with a compact panel that opens from its Modes and Scenes tabs.
 - 🎨 **45 preset colors + a color wheel**, HEX input and favorite colors.
 - 🔄 **In-app updates**: when a new version is out, an **Update** button appears in the header and a small notice shows in the quick panel. Read the release notes and download with one click; the file is verified, the app updates itself and restarts. You can also check manually with **Check for updates**.
-- 🌍 **English and Turkish**: the interface opens in English or Turkish depending on your system language; change it in **General → Dil / Language** and it applies instantly, without a restart.
+- 🌍 **English and Turkish**: the interface opens in English or Turkish depending on your system language; change it in **Settings → Dil / Language** and it applies instantly, without a restart.
 - 🚀 **Start with Windows**: starts quietly in the tray at sign-in. On a Mac, **Open at login** starts it in the menu bar only.
 - 🍎 **macOS (Apple Silicon)**: the same interface on the Mac: scenes, Screen sync, Audio (system audio or microphone), Spotify / Music, Rainbow, Fireplace, Daylight, timers, a menu bar icon, mini mode and in-app updates.
 

@@ -20,6 +20,13 @@ public sealed class DemoBackend : IGattBackend
 
 	public DemoPeripheral Bulb { get; } = new DemoPeripheral();
 
+	private int failConnects = int.TryParse(Environment.GetEnvironmentVariable("CHIARO_DEMO_FAIL_CONNECTS"), out int n) ? Math.Max(0, n) : 0;
+
+	public DemoBackend()
+	{
+		if (Environment.GetEnvironmentVariable("CHIARO_DEMO_POWER_OFF") == "1") Bulb.SetPowerForDemo(false);
+	}
+
 	public Task<string> AdapterStatusAsync(CancellationToken ct) => Task.FromResult("Bluetooth LE adaptörü hazır");
 
 	public async Task ScanAsync(Action<Advert> found, TimeSpan duration, CancellationToken ct)
@@ -33,6 +40,12 @@ public sealed class DemoBackend : IGattBackend
 	{
 		await Task.Delay(250, ct);
 		if (id != DemoId) throw new GattException(GattFailure.UnknownDevice, "Çevre birimi bulunamadı");
+		// Önizleme/test: ilk N bağlantı başarısız (Bluetooth oturum açılışında henüz hazır değil gibi).
+		if (failConnects > 0)
+		{
+			failConnects--;
+			throw new GattException(GattFailure.ConnectionFailed, "Bluetooth henüz hazır değil (demo)");
+		}
 		Bulb.Connect();
 		return Bulb;
 	}
@@ -66,6 +79,9 @@ public sealed class DemoPeripheral : IGattPeripheral
 	public event Action<string?>? Disconnected;
 
 	public void Connect() => IsConnected = true;
+
+	/// <summary>Önizleme/test: başlangıçta ampul kapalı.</summary>
+	public void SetPowerForDemo(bool on) => values[Protocol.Characteristic(2)] = new byte[] { (byte)(on ? 1 : 0) };
 
 	public void Drop()
 	{

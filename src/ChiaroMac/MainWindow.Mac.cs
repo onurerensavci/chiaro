@@ -36,8 +36,10 @@ public partial class MainWindow
 			Log("Güncelleme yardımcısı sonucu: " + updateStatus);
 			DetailText.Text = updateStatus == 0 ? L.F("mac_upd_updated", Program.Version) : L.T("mac_upd_helper_failed");
 		}
-		AutostartBox.IsChecked = OperatingSystem.IsMacOS() && LoginItem.IsEnabled();
-		AutostartBox.IsEnabled = OperatingSystem.IsMacOS();
+		// Linux önizlemesinde (demo) LaunchAgent dosyası geçici HOME altında olabilir; yalnız görünüm/benzetim için.
+		AutostartBox.IsChecked = (OperatingSystem.IsMacOS() || demoMode) && LoginItem.IsEnabled();
+		AutostartBox.IsEnabled = OperatingSystem.IsMacOS() || demoMode;
+		UpdateLightOnStartupBox();
 		AutoUpdateBox.IsChecked = macPrefs.AutoUpdateCheck;
 	}
 
@@ -48,13 +50,39 @@ public partial class MainWindow
 		if (error != null)
 		{
 			AutostartBox.IsChecked = LoginItem.IsEnabled();
+			UpdateLightOnStartupBox();
 			DetailText.Text = L.F("mac_login_failed", L.Message(error));
 			Log("Oturum açılışı: " + error);
 			return;
 		}
+		UpdateLightOnStartupBox();
 		DetailText.Text = L.T(want ? "autostart_tip" : "autostart");
 		if (want && OperatingSystem.IsMacOS() && !LoginItem.IsInApplications(LoginItem.BundlePath())) DetailText.Text = L.T("mac_move_to_apps_hint");
 		Log("Oturum açılışında başlat: " + (want ? "açık" : "kapalı"));
+	}
+
+	/// <summary>"Bilgisayar açılınca ışığı aç": oturum açılışında başlat kapalıyken görünür ama soluk; ipucu neden gerektiğini söyler.</summary>
+	private void UpdateLightOnStartupBox()
+	{
+		bool startup = AutostartBox.IsChecked == true;
+		LightOnStartupBox.IsChecked = settings.LightOnStartup;
+		LightOnStartupBox.IsEnabled = startup;
+		ToolTip.SetTip(LightOnStartupBox, L.T(startup ? "light_on_startup_tip" : "light_on_startup_needs"));
+	}
+
+	private void LightOnStartup_Click(object? sender, RoutedEventArgs e)
+	{
+		if (AutostartBox.IsChecked != true)
+		{
+			// Önce "Oturum açılışında başlat" gerekir; diğer ayarlar sessizce değiştirilmez.
+			DetailText.Text = L.T("light_on_startup_needs");
+			UpdateLightOnStartupBox();
+			return;
+		}
+		settings.LightOnStartup = LightOnStartupBox.IsChecked == true;
+		SaveSettings();
+		Log("Bilgisayar açılınca ışığı aç: " + (settings.LightOnStartup ? "açık" : "kapalı"));
+		UpdateLightOnStartupBox();
 	}
 
 	private void AutoUpdate_Click(object? sender, RoutedEventArgs e)

@@ -66,6 +66,7 @@ public partial class MainWindow : Window
 	{
 		if (started) return;
 		started = true;
+		autostartLaunch = true;
 		Log("Arka planda başlatıldı (oturum açılışı).");
 		InitTray();
 		if (tray == null)
@@ -115,7 +116,7 @@ public partial class MainWindow : Window
 		string? themeOverride = Environment.GetEnvironmentVariable("CHIARO_THEME");
 		darkTheme = themeOverride is "light" ? false : themeOverride is "dark" ? true : ReadTheme();
 		ApplyTheme(darkTheme);
-		VersionText.Text = $"Chiaro {MacUpdater.Current.Major}.{MacUpdater.Current.Minor} • Mac";
+		VersionText.Text = $"Chiaro {MacUpdater.Current.Major}.{MacUpdater.Current.Minor} • Mac" + BuildTag.Suffix;
 		HideButton.IsVisible = true;
 
 		WireSliders();
@@ -269,6 +270,7 @@ public partial class MainWindow : Window
 	private void ApplyLanguage()
 	{
 		Tr.RefreshAll();
+		UpdateLightOnStartupBox();
 		ThemeButton.Content = darkTheme ? L.T("theme_light") : L.T("theme_dark");
 		ThemeButton2.Content = darkTheme ? L.T("theme_light") : L.T("theme_dark");
 		ScenesHint.Text = L.T("scenes_hint").Replace("sağ tıkla", "sağ tıkla / Ctrl-tıkla").Replace("Right-click", "Right-click / Ctrl-click");
@@ -631,32 +633,97 @@ public partial class MainWindow : Window
 		}
 	}
 
+	/// <summary>LaunchAgent ile (--background) açıldı mı? "Bilgisayar açılınca ışığı aç" yalnız bu durumda çalışır.</summary>
+	private bool autostartLaunch;
+
 	private async Task StartupConnect()
 	{
+		// "Bilgisayar açılınca ışığı aç": yalnız oturum açılışında (LaunchAgent --background); elle açılışta ya da güncelleme sonrası yeniden açılışta değil.
+		bool loginOn = (OperatingSystem.IsMacOS() || demoMode) && LoginItem.IsEnabled();
+		bool lightUp = StartupLight.ShouldRun(autostartLaunch, settings.LightOnStartup, loginOn);
+		if (settings.LightOnStartup)
+		{
+			Log(lightUp ? "Bilgisayar açılınca ışığı aç: oturum açılışı algılandı (--background); son ampule bağlanılıp ışık açılacak (en çok ~60 sn yeniden denenir)."
+				: autostartLaunch ? "Bilgisayar açılınca ışığı aç: oturum açılışında başlat kapalı, atlandı."
+				: "Bilgisayar açılınca ışığı aç: elle açılış (oturum açılışı değil), ışık açılmayacak.");
+		}
 		Lamp? lamp = LoadLamp();
 		if (lamp == null && demoMode && Environment.GetEnvironmentVariable("CHIARO_DEMO_AUTOCONNECT") == "1")
 		{
 			lamp = new Lamp(DemoBackend.DemoId, "Hue Play", false, -52);
 		}
-		if (lamp == null || string.IsNullOrEmpty(lamp.Id)) return;
+		if (lamp == null || string.IsNullOrEmpty(lamp.Id))
+		{
+			if (lightUp) Log("Bilgisayar açılınca ışığı aç: hatırlanan ampul yok, atlandı.");
+			return;
+		}
 		lamps.Add(lamp);
 		Devices.SelectedItem = lamp;
 		ScanSummary.Text = L.T("reconnecting_last");
-		try
+		System.Diagnostics.Stopwatch elapsed = System.Diagnostics.Stopwatch.StartNew();
+		for (int attempt = 0; ; attempt++)
 		{
-			for (int attempt = 0; attempt < 3; attempt++)
+			if (closed || autoCancelled || ble.Ready) break;
+			if (lightUp && busy)
 			{
-				if (closed || autoCancelled || ble.Ready) break;
-				if (busy || (Devices.SelectedItem as Lamp)?.Key != lamp.Key) return;
-				await ConnectSelected(lamp);
-				if (ble.Ready || autoCancelled || closed) break;
-				await Task.Delay(TimeSpan.FromSeconds(10));
+				// Kendiliğinden yeniden bağlanma ya da bir program o an bağlanıyorsa bitmesini bekle; vazgeçme.
+				while (busy && !closed && elapsed.Elapsed < StartupLight.Window) await Task.Delay(500);
+				if (busy || closed) break;
+				continue;
 			}
-		}
-		finally
-		{
+			if (busy || (Devices.SelectedItem as Lamp)?.Key != lamp.Key)
+			{
+				if (lightUp) Log("Bilgisayar açılınca ışığı aç: kullanıcı başka bir ampul/işlem seçti, vazgeçildi.");
+				return;
+			}
+			if (lightUp) Log($"Bilgisayar açılınca ışığı aç: bağlantı denemesi {attempt + 1} ({elapsed.Elapsed.TotalSeconds:F0} sn).");
+			await ConnectSelected(lamp);
+			if (ble.Ready || autoCancelled || closed) break;
+			TimeSpan wait = TimeSpan.FromSeconds(10);
+			if (lightUp)
+			{
+				// Bluetooth oturum açılışında hemen hazır olmayabilir: artan aralıklarla ~60 sn boyunca yeniden dene.
+				if (StartupLight.NextDelay(attempt, elapsed.Elapsed) is not TimeSpan next)
+				{
+					Log($"Bilgisayar açılınca ışığı aç: {attempt + 1} denemede bağlanılamadı ({elapsed.Elapsed.TotalSeconds:F0} sn), vazgeçildi.");
+					break;
+				}
+				wait = next;
+				Log($"Bilgisayar açılınca ışığı aç: bağlanılamadı, {wait.TotalSeconds:F0} sn sonra yeniden denenecek.");
+			}
+			else if (attempt >= 2)
+			{
+				break;
+			}
+			await Task.Delay(wait);
 		}
 		if (!closed) ScanSummary.Text = ble.Ready ? L.T("connected_dot") : L.T("connect_failed_retry");
+		if (lightUp && !closed)
+		{
+			if (ble.Ready) await StartupPowerOn();
+			else if (autoCancelled) Log("Bilgisayar açılınca ışığı aç: kullanıcı iptal etti / taradı, ışığa dokunulmadı.");
+		}
+	}
+
+	/// <summary>Açılışta bağlandıktan sonra bir kez: ışığı açar. Ampul son rengi ve parlaklığıyla yanar (Hue ampul bunları kendisi saklar).</summary>
+	private async Task StartupPowerOn()
+	{
+		for (int i = 0; i < 40 && busy; i++) await Task.Delay(250);
+		string? skip = StartupLight.SkipReason(autoCancelled, modeName, powerOn);
+		if (skip != null)
+		{
+			Log("Bilgisayar açılınca ışığı aç: " + skip + ", ışığa dokunulmadı.");
+			return;
+		}
+		if (!ble.Supports(2))
+		{
+			Log("Bilgisayar açılınca ışığı aç: ampul güç komutunu desteklemiyor.");
+			return;
+		}
+		await SetPower(true);
+		bool ok = powerOn == true && !lastRunFailed && ble.Ready;
+		Log("Bilgisayar açılınca ışığı aç: " + (ok ? "ışık açıldı." : "ışık açılamadı."));
+		if (ok) DetailText.Text = L.T("light_on_startup_done");
 	}
 
 	private async void Forget_Click(object? sender, RoutedEventArgs e)

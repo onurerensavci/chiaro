@@ -49,6 +49,8 @@ public partial class MainWindow : Window
 	private bool exitRequested;
 	private bool hideTipShown;
 	private bool autoConnecting;
+	/// <summary>Windows açılışında Run kaydıyla (--tray) başlatıldı mı? "Bilgisayar açılınca ışığı aç" yalnız bu durumda çalışır.</summary>
+	private bool autostartLaunch;
 
 	// ---- Ayarlar ----
 	private readonly StudioSettings settings;
@@ -123,6 +125,7 @@ public partial class MainWindow : Window
 
 		ApplyTheme(!persistent || ReadTheme());
 		AutoStartBox.IsChecked = settings.AutoStart;
+		UpdateLightOnStartupBox();
 		SourceInitialized += (_, _) =>
 		{
 			ApplyTitleTheme();
@@ -156,7 +159,9 @@ public partial class MainWindow : Window
 				}
 			}));
 		};
-		VersionLabel.Text = "Chiaro " + Updater.CurrentText;
+		VersionLabel.Text = "Chiaro " + Updater.CurrentText + BuildTag.Suffix;
+		// Deneme yapısı: başlık ve sürüm etiketi ayırt edilsin (ör. "Chiaro 3.6 • test1").
+		if (BuildTag.Test != null) Title = "Chiaro " + Updater.CurrentText + BuildTag.Suffix;
 		Log($"Chiaro {Updater.CurrentText}; Windows {Environment.OSVersion}; .NET {Environment.Version}; x64={Environment.Is64BitProcess}");
 		if (enableTray)
 		{
@@ -428,6 +433,14 @@ public partial class MainWindow : Window
 	private async void StartupConnect(object? sender, EventArgs e)
 	{
 		ContentRendered -= StartupConnect;
+		// "Bilgisayar açılınca ışığı aç": yalnız Run kaydıyla (--tray) açılışta; elle açılışta ya da --updated ile yeniden açılışta değil.
+		bool lightUp = persistent && StartupLight.ShouldRun(autostartLaunch, settings.LightOnStartup, settings.AutoStart);
+		if (persistent && settings.LightOnStartup)
+		{
+			Log(lightUp ? "Bilgisayar açılınca ışığı aç: otomatik başlatma algılandı (--tray); son ampule bağlanılıp ışık açılacak (en çok ~60 sn yeniden denenir)."
+				: autostartLaunch ? "Bilgisayar açılınca ışığı aç: Windows ile başlat kapalı, atlandı."
+				: "Bilgisayar açılınca ışığı aç: elle açılış (otomatik başlatma değil), ışık açılmayacak.");
+		}
 		Lamp? lamp;
 		try
 		{
@@ -440,30 +453,57 @@ public partial class MainWindow : Window
 		}
 		if (lamp is null || lamp.Address == 0L || lamp.Address > 281474976710655L)
 		{
+			if (lightUp) Log("Bilgisayar açılınca ışığı aç: hatırlanan ampul yok, atlandı.");
 			return;
 		}
 		lamps.Add(lamp);
 		Devices.SelectedItem = lamp;
 		ScanSummary.Text = L.T("reconnecting_last");
 		autoConnecting = true;
+		Stopwatch elapsed = Stopwatch.StartNew();
 		try
 		{
-		for (int attempt = 0; attempt < 3; attempt++)
+		for (int attempt = 0; ; attempt++)
 		{
 			if (closed || autoCancelled || ble.Ready)
 			{
 				break;
 			}
+			if (lightUp && busy)
+			{
+				// Başka bir otomatik işlem (ör. program) bağlanıyorsa bitmesini bekle; vazgeçme.
+				while (busy && !closed && elapsed.Elapsed < StartupLight.Window) await Task.Delay(500);
+				if (busy || closed) break;
+				continue;
+			}
 			if (busy || (Devices.SelectedItem as Lamp)?.Key != lamp.Key)
 			{
+				if (lightUp) Log("Bilgisayar açılınca ışığı aç: kullanıcı başka bir ampul/işlem seçti, vazgeçildi.");
 				return;
 			}
+			if (lightUp) Log($"Bilgisayar açılınca ışığı aç: bağlantı denemesi {attempt + 1} ({elapsed.Elapsed.TotalSeconds:F0} sn).");
 			await ConnectSelected(lamp);
 			if (ble.Ready || autoCancelled || closed)
 			{
 				break;
 			}
-			await Task.Delay(TimeSpan.FromSeconds(10L));
+			TimeSpan wait = TimeSpan.FromSeconds(10L);
+			if (lightUp)
+			{
+				// Bluetooth oturum açılışında hemen hazır olmayabilir: artan aralıklarla ~60 sn boyunca yeniden dene.
+				if (StartupLight.NextDelay(attempt, elapsed.Elapsed) is not TimeSpan next)
+				{
+					Log($"Bilgisayar açılınca ışığı aç: {attempt + 1} denemede bağlanılamadı ({elapsed.Elapsed.TotalSeconds:F0} sn), vazgeçildi.");
+					break;
+				}
+				wait = next;
+				Log($"Bilgisayar açılınca ışığı aç: bağlanılamadı, {wait.TotalSeconds:F0} sn sonra yeniden denenecek.");
+			}
+			else if (attempt >= 2)
+			{
+				break;
+			}
+			await Task.Delay(wait);
 		}
 		}
 		finally
@@ -474,6 +514,32 @@ public partial class MainWindow : Window
 		{
 			ScanSummary.Text = (ble.Ready ? L.T("connected_dot") : L.T("connect_failed_retry"));
 		}
+		if (lightUp && !closed)
+		{
+			if (ble.Ready) await StartupPowerOn();
+			else if (autoCancelled) Log("Bilgisayar açılınca ışığı aç: kullanıcı iptal etti / taradı, ışığa dokunulmadı.");
+		}
+	}
+
+	/// <summary>Açılışta bağlandıktan sonra bir kez: ışığı açar. Ampul son rengi ve parlaklığıyla yanar (Hue ampul bunları kendisi saklar).</summary>
+	private async Task StartupPowerOn()
+	{
+		for (int i = 0; i < 40 && busy; i++) await Task.Delay(250);
+		string? skip = StartupLight.SkipReason(autoCancelled, modeName, powerOn);
+		if (skip != null)
+		{
+			Log("Bilgisayar açılınca ışığı aç: " + skip + ", ışığa dokunulmadı.");
+			return;
+		}
+		if (!ble.Supports(2))
+		{
+			Log("Bilgisayar açılınca ışığı aç: ampul güç komutunu desteklemiyor.");
+			return;
+		}
+		await SetPower(true);
+		bool ok = powerOn == true && !lastRunFailed && ble.Ready;
+		Log("Bilgisayar açılınca ışığı aç: " + (ok ? "ışık açıldı." : "ışık açılamadı."));
+		if (ok) DetailText.Text = L.T("light_on_startup_done");
 	}
 
 	private void Forget_Click(object sender, RoutedEventArgs e)
@@ -1251,6 +1317,7 @@ public partial class MainWindow : Window
 	internal void StartInTray()
 	{
 		hideTipShown = true;
+		autostartLaunch = true;
 		StartupConnect(this, EventArgs.Empty);
 	}
 
@@ -1261,6 +1328,31 @@ public partial class MainWindow : Window
 			Log("Başlangıç kaydı yazılamadı.");
 		}
 		AutoStartBox.IsChecked = AutoStart.IsEnabled();
+		UpdateLightOnStartupBox();
+	}
+
+	/// <summary>"Bilgisayar açılınca ışığı aç": Windows ile başlat kapalıyken görünür ama soluk; ipucu neden gerektiğini söyler.</summary>
+	private void UpdateLightOnStartupBox()
+	{
+		bool startup = AutoStartBox.IsChecked == true;
+		LightOnStartupBox.IsChecked = settings.LightOnStartup;
+		LightOnStartupBox.IsEnabled = startup;
+		LightOnStartupBox.ToolTip = L.T(startup ? "light_on_startup_tip" : "light_on_startup_needs");
+	}
+
+	private void LightOnStartup_Click(object sender, RoutedEventArgs e)
+	{
+		if (AutoStartBox.IsChecked != true)
+		{
+			// Önce "Windows ile başlat" gerekir; diğer ayarlar sessizce değiştirilmez.
+			DetailText.Text = L.T("light_on_startup_needs");
+			UpdateLightOnStartupBox();
+			return;
+		}
+		settings.LightOnStartup = LightOnStartupBox.IsChecked == true;
+		SaveSettings();
+		Log("Bilgisayar açılınca ışığı aç: " + (settings.LightOnStartup ? "açık" : "kapalı"));
+		UpdateLightOnStartupBox();
 	}
 
 	private void SetAutoStart(bool enabled)
@@ -1313,11 +1405,18 @@ public partial class MainWindow : Window
 		exitRequested = true;
 	}
 
+	/// <summary>Gizli test kancası: ayarlanırsa günlük satırları bu dosyaya da yazılır (ör. Wine'da açılış benzetimi).</summary>
+	private static readonly string? LogFile = Environment.GetEnvironmentVariable("CHIARO_LOG_FILE");
+
 	private void Log(string message)
 	{
 		lock (logs)
 		{
 			logs.Add($"{DateTimeOffset.Now:O} {message}");
+			if (!string.IsNullOrWhiteSpace(LogFile))
+			{
+				try { File.AppendAllText(LogFile, $"{DateTimeOffset.Now:O} {message}\n"); } catch (Exception) { }
+			}
 			if (logs.Count > 1000)
 			{
 				logs.RemoveAt(0);

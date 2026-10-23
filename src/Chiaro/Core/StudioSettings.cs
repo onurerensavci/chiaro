@@ -143,6 +143,8 @@ public sealed class StudioSettings
 	public string SelectedTab { get; set; } = "Manuel";
 	public bool GlassEnabled { get; set; } = true;
 	public bool AutoStart { get; set; } = true;
+	/// <summary>Bilgisayar açılınca (yalnız otomatik başlatmada) son ampule bağlanıp ışığı aç. Varsayılan kapalı.</summary>
+	public bool LightOnStartup { get; set; }
 	public List<string> Favorites { get; set; } = new List<string>(Palette.DefaultFavorites);
 	public List<string> Recent { get; set; } = new List<string>();
 
