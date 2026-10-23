@@ -418,6 +418,8 @@ public partial class App : Application
 		LocalizationSelfTest.StaleScan("update dialog", LocalizationSelfTest.Texts(probe).Where(t => !t.Contains("Gün doğumu") && !t.Contains("Küçük hata")));
 		probe.Close();
 		LocalizationSelfTest.StaleScan("emoji picker", LocalizationSelfTest.Texts(EmojiPicker.PreviewForTest("🎮")));
+		string badgeEn = window.TimerBadgeForTest();
+		if (!badgeEn.StartsWith("OFF | SLEEP | ") || System.Text.RegularExpressions.Regex.IsMatch(badgeEn, "KAPALI|UYKU|PROGRAM")) throw new InvalidOperationException("Timer badge not English: " + badgeEn);
 		LocalizationSelfTest.StaleScan("built-in scenes", Scene.Defaults().SelectMany(s => new[] { s.DisplayName, s.Subtitle }));
 		RenderFloatingKeep(mini);
 		quick.Close();
@@ -444,7 +446,7 @@ public partial class App : Application
 		window.MiniBarForTest("");
 		UpdateInfo fake = UpdaterSelfTest.SampleInfo();
 		window.SetUpdateForTest(fake);
-		await RenderContent(window, Path.Combine(folder, "tmp-dock.png"), 1240, 1000, (window.HeaderElement, Path.Combine(folder, "10-guncelle-v3.4-en.png")));
+		await RenderContent(window, Path.Combine(folder, "tmp-dock.png"), 1240, 1000, (window.HeaderElement, Path.Combine(folder, "10-guncelle-v3.5-en.png")));
 		await RenderFloating(new QuickPanel(window), Path.Combine(folder, "7-hizli-panel-guncelleme-en.png"), 380);
 		await RenderFloating(new UpdateDialog(null, fake, null), Path.Combine(folder, "11-guncelleme-penceresi-en.png"), 0);
 		UpdateDialog d = new UpdateDialog(null, fake, null);
@@ -465,10 +467,13 @@ public partial class App : Application
 		window.ApplyDemoControls();
 		List<string> english = LocalizationSelfTest.Texts(window).Where(t => Strings.En.Values.Contains(t.Trim()) && !Strings.Tr.Values.Contains(t.Trim())).Distinct().ToList();
 		if (english.Count > 0) throw new InvalidOperationException("English text left after switching back to Turkish: " + string.Join(" | ", english.Take(20)));
+		string badgeTr = window.TimerBadgeForTest();
+		if (!badgeTr.StartsWith("KAPALI | UYKU | ") || System.Text.RegularExpressions.Regex.IsMatch(badgeTr, "OFF|SLEEP|SCHEDULED")) throw new InvalidOperationException("Timer badge not Turkish: " + badgeTr);
 		window.SetLanguage(L.Auto);
 		string autoLang = L.Lang;
 		window.SetLanguage(L.Turkish);
-		return result + $"\nLive switch back English -> Türkçe: PASS. Otomatik (Sistem) resolved to '{autoLang}' in this process.";
+		return result + $"\nLive switch back English -> Türkçe: PASS. Otomatik (Sistem) resolved to '{autoLang}' in this process."
+			+ $"\nTimer badge localized: en [{badgeEn}], tr [{badgeTr}]: PASS.";
 	}
 
 	private static void RenderFloatingKeep(Window w)
@@ -476,7 +481,7 @@ public partial class App : Application
 		w.Close();
 	}
 
-	/// <summary>3.3 güncelleme arayüzü durumları (sahte v3.4; ağ kullanılmaz).</summary>
+	/// <summary>3.3 güncelleme arayüzü durumları (sahte v3.5; ağ kullanılmaz).</summary>
 	private static async Task UpdateScreens(MainWindow window, string folder)
 	{
 		UpdateInfo fake = UpdaterSelfTest.SampleInfo();
@@ -487,7 +492,7 @@ public partial class App : Application
 		window.SetUpdateForTest(null, L.T("upd_uptodate"));
 		await RenderContent(window, Path.Combine(folder, "tmp-dock.png"), 1240, 1000, (window.HeaderElement, Path.Combine(folder, "10-en-guncel-surum.png")));
 		window.SetUpdateForTest(fake);
-		await RenderContent(window, Path.Combine(folder, "10-tam-ekran-guncelleme-var.png"), 1240, 1000, (window.HeaderElement, Path.Combine(folder, "10-guncelle-v3.4.png")));
+		await RenderContent(window, Path.Combine(folder, "10-tam-ekran-guncelleme-var.png"), 1240, 1000, (window.HeaderElement, Path.Combine(folder, "10-guncelle-v3.5.png")));
 		File.Delete(Path.Combine(folder, "tmp-dock.png"));
 		window.QuickPanelTab = ScenesModes.ScenesTab;
 		await RenderFloating(new QuickPanel(window), Path.Combine(folder, "7-hizli-panel-guncelleme.png"), 380);

@@ -2074,8 +2074,8 @@ public partial class MainWindow : Window
 	{
 		lock (logs)
 		{
-			string lampLine = Devices.SelectedItem is Lamp sel ? $"Ampul: {sel.Display} (…{sel.Tail}){(ble.Ready ? " • bağlı" : "")}\n" : "Ampul: seçilmedi\n";
-			return "Chiaro " + Updater.CurrentText + " — tanı raporu\nCihaz adı ve Bluetooth adresi içerebilir.\n" + lampLine + "\n" + string.Join(Environment.NewLine, logs);
+			string lampLine = (Devices.SelectedItem is Lamp sel ? L.F("report_lamp", sel.Display, sel.Tail) + (ble.Ready ? L.T("report_connected") : "") : L.T("report_no_lamp")) + "\n";
+			return L.F("report_header", "Chiaro " + Updater.CurrentText) + "\n" + lampLine + "\n" + string.Join(Environment.NewLine, logs);
 		}
 	}
 
@@ -2083,8 +2083,8 @@ public partial class MainWindow : Window
 	{
 		SaveFileDialog saveFileDialog = new SaveFileDialog
 		{
-			FileName = "Chiaro-tani.txt",
-			Filter = "Metin|*.txt"
+			FileName = L.T("report_file"),
+			Filter = L.T("report_filter")
 		};
 		if (saveFileDialog.ShowDialog(this) == true)
 		{

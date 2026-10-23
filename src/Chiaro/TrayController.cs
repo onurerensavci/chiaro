@@ -661,7 +661,9 @@ public sealed class TrayController : IDisposable
 	private static Icon CreateIcon()
 	{
 		using Stream stream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/Chiaro.ico")).Stream;
-		using Icon icon = new Icon(stream, 32, 32);
+		// Bildirim alanı küçük simge boyutunu kullanır (100% = 16, 125% = 20, 150% = 24 px); .ico'da her boyut hazır.
+		System.Drawing.Size size = SystemInformation.SmallIconSize;
+		using Icon icon = new Icon(stream, size.Width > 0 ? size.Width : 16, size.Height > 0 ? size.Height : 16);
 		return (Icon)icon.Clone();
 	}
 

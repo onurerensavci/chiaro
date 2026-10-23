@@ -127,6 +127,41 @@ public partial class MainWindow
 		if (settings.SleepUntil.HasValue || modeName.Length > 0) RaiseLightState();
 	}
 
+	/// <summary>Duman testi: zamanlayıcı rozetinin her durumu etkin dilde (kapalı, uyku, alarm, program) yazılır.</summary>
+	internal string TimerBadgeForTest()
+	{
+		DateTime? sleep = settings.SleepUntil;
+		bool wake = settings.Wake.Enabled;
+		bool[] enabled = settings.Schedules.Select(s => s.Enabled).ToArray();
+		try
+		{
+			settings.SleepUntil = null;
+			settings.Wake.Enabled = false;
+			foreach (ScheduleItem s in settings.Schedules) s.Enabled = false;
+			UpdateTimerUi();
+			string off = TimerBadge.Text;
+			settings.SleepUntil = DateTime.Now.AddMinutes(30);
+			UpdateTimerUi();
+			string asleep = TimerBadge.Text;
+			settings.SleepUntil = null;
+			string programs = "";
+			if (settings.Schedules.Count > 0)
+			{
+				settings.Schedules[0].Enabled = true;
+				UpdateTimerUi();
+				programs = TimerBadge.Text;
+			}
+			return off + " | " + asleep.Split(' ')[0] + " | " + programs;
+		}
+		finally
+		{
+			settings.SleepUntil = sleep;
+			settings.Wake.Enabled = wake;
+			for (int i = 0; i < enabled.Length && i < settings.Schedules.Count; i++) settings.Schedules[i].Enabled = enabled[i];
+			UpdateTimerUi();
+		}
+	}
+
 	private void UpdateTimerUi()
 	{
 		string? remaining = settings.SleepUntil is DateTime u ? Remaining(u) : null;
@@ -134,10 +169,10 @@ public partial class MainWindow
 		SleepCancelButton.Visibility = remaining == null ? Visibility.Collapsed : Visibility.Visible;
 		tray?.SetSleep(remaining);
 		string badge;
-		if (remaining != null) badge = "UYKU " + remaining;
-		else if (settings.Wake.Enabled && NextWake() is DateTime w) badge = "ALARM " + w.ToString("HH:mm");
-		else if (settings.Schedules.Any(s => s.Enabled)) badge = $"{settings.Schedules.Count(s => s.Enabled)} PROGRAM";
-		else badge = "KAPALI";
+		if (remaining != null) badge = L.F("badge_sleep", remaining);
+		else if (settings.Wake.Enabled && NextWake() is DateTime w) badge = L.F("badge_alarm", w.ToString("HH:mm"));
+		else if (settings.Schedules.Any(s => s.Enabled)) badge = L.F("badge_programs", settings.Schedules.Count(s => s.Enabled));
+		else badge = L.T("off_upper");
 		TimerBadge.Text = badge;
 		if (settings.Wake.Enabled && NextWake() is DateTime next)
 		{
@@ -234,7 +269,7 @@ public partial class MainWindow
 				if (item.SceneId != null) await ApplySceneById(item.SceneId);
 				break;
 		}
-		if (!IsVisible) tray?.Notify("Program", $"{item.Time} • {ScheduleLabel(item)}");
+		if (!IsVisible) tray?.Notify(L.T("schedule_notify"), $"{item.Time} • {ScheduleLabel(item)}");
 	}
 
 	// =====================================================================
