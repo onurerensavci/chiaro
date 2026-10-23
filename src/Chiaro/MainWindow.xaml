@@ -94,7 +94,7 @@
             <Button x:Name="ThemeButton" Style="{StaticResource Small}" Content="{l:T theme_light}" Click="Theme_Click" />
             <Button Style="{StaticResource HeaderButton}" Click="About_Click" ToolTip="{l:T about}" Margin="4,0,0,0" VerticalAlignment="Center">
               <StackPanel>
-                <TextBlock x:Name="VersionLabel" Text="Chiaro 3.4" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" HorizontalAlignment="Right" />
+                <TextBlock x:Name="VersionLabel" Text="Chiaro 3.5" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" HorizontalAlignment="Right" />
                 <TextBlock Text="Onur Eren Savcı × Grok Bot" FontSize="10" Foreground="{DynamicResource Muted}" Opacity="0.75" TextWrapping="NoWrap" HorizontalAlignment="Right" />
               </StackPanel>
             </Button>

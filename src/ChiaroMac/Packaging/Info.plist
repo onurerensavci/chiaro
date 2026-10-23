@@ -26,9 +26,9 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.4.0</string>
+	<string>3.5</string>
 	<key>CFBundleVersion</key>
-	<string>3.4.0.4</string>
+	<string>3.5.0</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSArchitecturePriority</key>
@@ -56,6 +56,6 @@
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Chiaro, Spotify modunda çalan şarkıyı ve kapak resmini okumak için Spotify'a (veya Müzik'e) soru sorar. / Chiaro asks Spotify (or Music) for the current track and its cover art for the Spotify mode.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Chiaro — test build (Mac test 4)</string>
+	<string>Chiaro</string>
 </dict>
 </plist>

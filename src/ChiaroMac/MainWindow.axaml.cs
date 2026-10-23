@@ -115,7 +115,7 @@ public partial class MainWindow : Window
 		string? themeOverride = Environment.GetEnvironmentVariable("CHIARO_THEME");
 		darkTheme = themeOverride is "light" ? false : themeOverride is "dark" ? true : ReadTheme();
 		ApplyTheme(darkTheme);
-		VersionText.Text = "Chiaro " + Program.Version.Split('-')[0][..3] + " • Mac";
+		VersionText.Text = $"Chiaro {MacUpdater.Current.Major}.{MacUpdater.Current.Minor} • Mac";
 		HideButton.IsVisible = true;
 
 		WireSliders();
@@ -279,7 +279,7 @@ public partial class MainWindow : Window
 			if (!ble.Ready) DetailText.Text = L.T("status_remembered");
 		}
 		if (StateText.Text != null && !ble.Ready) StateText.Text = L.T("not_connected_dot");
-		MetaText.Text = (ble.Ready ? L.Message(ble.Metadata) + "\n" : "") + L.T("mac_test_note") + (demoMode ? " • Demo" : "");
+		MetaText.Text = (ble.Ready ? L.Message(ble.Metadata) : "") + (demoMode ? (ble.Ready ? " • " : "") + "Demo" : "");
 		BuildPalette();
 		RebuildScenes();
 		RebuildModeTilesText();
@@ -323,7 +323,7 @@ public partial class MainWindow : Window
 		ModeStart.Content = modeName.Length > 0 ? L.T("stop") : L.T("start");
 		ModeBadge.IsVisible = modeName.Length > 0;
 		ModeBadgeText.Text = modeName.Length > 0 ? L.Upper(L.Mode(modeName) + " • " + L.T("live")) : "";
-		MetaText.Text = (ready ? L.Message(ble.Metadata) + "\n" : "") + L.T("mac_test_note") + (demoMode ? " • Demo" : "");
+		MetaText.Text = (ready ? L.Message(ble.Metadata) : "") + (demoMode ? (ready ? " • " : "") + "Demo" : "");
 		UpdateDock();
 		RebuildTrayMenu();
 	}
@@ -969,7 +969,7 @@ public partial class MainWindow : Window
 	private async void Help_Click(object? sender, RoutedEventArgs e) => await Dialogs.Info(this, L.T("help_title"), L.T("help_text"));
 
 	internal async void About_Click(object? sender, RoutedEventArgs e) =>
-		await Dialogs.Info(this, "Chiaro " + Program.Version, L.T("about_body") + "\n\n" + L.T("mac_test_note"));
+		await Dialogs.Info(this, "Chiaro " + Program.Version, L.T("about_body"));
 
 	private void BtSettings_Click(object? sender, RoutedEventArgs e)
 	{

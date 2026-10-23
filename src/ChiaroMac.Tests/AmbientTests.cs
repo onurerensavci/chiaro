@@ -156,7 +156,22 @@ public class MacSystemTests
 	[Fact]
 	public void Current_version_from_program()
 	{
-		Assert.Equal(new Version(3, 4, 0), MacUpdater.Current);
+		Assert.Equal(new Version(3, 5, 0), MacUpdater.Current);
+	}
+
+	[Fact]
+	public void Release_3_5_is_current_and_3_6_is_newer()
+	{
+		Version cur = MacUpdater.Current;
+		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.5", "Chiaro_v3.5.exe", "Chiaro_v3.5_mac.zip"), cur).Status);
+		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.5.0", "Chiaro_v3.5.0_mac.zip"), cur).Status);
+		var (u, status) = MacUpdater.Evaluate(Release("v3.6", "Chiaro_v3.6.exe", "Chiaro_v3.6.exe.sha256", "Chiaro_v3.6_mac.zip", "Chiaro_v3.6_mac.zip.sha256"), cur);
+		Assert.Equal("mac_upd_available", status);
+		Assert.Equal("Chiaro_v3.6_mac.zip", u!.AssetName);
+		Assert.Equal("mac_upd_available", MacUpdater.Evaluate(Release("v3.5.1", "Chiaro_v3.5.1_mac.zip"), cur).Status);
+		Assert.Equal("mac_upd_available", MacUpdater.Evaluate(Release("v3.10", "Chiaro_v3.10_mac.zip"), cur).Status);
+		Assert.True(MacUpdater.Compare(new Version(3, 6), new Version(3, 5, 0)) > 0);
+		Assert.Equal(0, MacUpdater.Compare(new Version(3, 5), new Version(3, 5, 0, 0)));
 	}
 
 	[Theory]

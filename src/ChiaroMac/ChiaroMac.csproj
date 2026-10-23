@@ -13,14 +13,14 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);CHIARO_MAC</DefineConstants>
-    <Version>3.4.0</Version>
-    <InformationalVersion>3.4.0-mac-test4</InformationalVersion>
-    <AssemblyVersion>3.4.0.0</AssemblyVersion>
-    <FileVersion>3.4.0.0</FileVersion>
+    <Version>3.5.0</Version>
+    <InformationalVersion>3.5.0</InformationalVersion>
+    <AssemblyVersion>3.5.0.0</AssemblyVersion>
+    <FileVersion>3.5.0.0</FileVersion>
     <Product>Chiaro</Product>
     <Company>Chiaro</Company>
     <AssemblyTitle>Chiaro</AssemblyTitle>
-    <Description>Chiaro — Philips Hue Bluetooth ampuller için bağımsız bir uygulama (macOS test sürümü)</Description>
+    <Description>Chiaro — Philips Hue Bluetooth ampuller için bağımsız bir uygulama (macOS)</Description>
     <NeutralLanguage>tr-TR</NeutralLanguage>
     <SatelliteResourceLanguages>tr</SatelliteResourceLanguages>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

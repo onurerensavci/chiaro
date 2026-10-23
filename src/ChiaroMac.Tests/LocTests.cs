@@ -62,7 +62,7 @@ public class LocTests
 				string en = L.Message("Komut: " + s);
 				Assert.DoesNotMatch("[ğüşıöçĞÜŞİÖÇ]", en);
 			}
-			Assert.Equal(MacStrings.En["mac_test_badge"], L.T("mac_test_badge"));
+			Assert.Equal(MacStrings.En["mac_upd_install"], L.T("mac_upd_install"));
 		}
 		finally
 		{

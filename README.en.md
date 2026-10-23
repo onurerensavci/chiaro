@@ -10,18 +10,19 @@
 
 </div>
 
-<p align="center"><b>A sleek Windows remote for your Philips Hue Bluetooth bulbs. No bridge, no cloud, just light.</b></p>
+<p align="center"><b>A sleek Windows and macOS remote for your Philips Hue Bluetooth bulbs. No bridge, no cloud, just light.</b></p>
 
 <p align="center"><i>An independent app for Philips Hue Bluetooth bulbs; not affiliated with Philips or Signify.</i></p>
 
 <p align="center">
   <a href="https://github.com/onurerensavci/chiaro/releases/latest"><img src="https://img.shields.io/github/v/release/onurerensavci/chiaro?label=download&color=0A84FF" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4" alt="Windows 10/11" />
+  <img src="https://img.shields.io/badge/macOS-13%2B%20(Apple%20Silicon)-555555" alt="macOS 13+ (Apple Silicon)" />
   <img src="https://img.shields.io/badge/.NET-10-512BD4" alt=".NET 10" />
   <img src="https://img.shields.io/badge/license-MIT-30D158" alt="MIT" />
 </p>
 
-Chiaro lets you control Philips Hue Bluetooth bulbs from Windows **without a Hue Bridge**, straight over your computer's Bluetooth.
+Chiaro lets you control Philips Hue Bluetooth bulbs from Windows or a Mac **without a Hue Bridge**, straight over your computer's Bluetooth.
 Set the color, brightness and white tone, and sync the light with your screen, your music or the time of day.
 
 **Chiaro** is Italian for “light”, from *chiaroscuro*, the painters' play of light and shadow. A duel of light and shadow, like Light and L.
@@ -47,8 +48,9 @@ This is my first project of its kind; I built every step of it, from the idea to
 - 📌 **Mini mode**: a slim always-on-top bar, with a compact panel that opens from its Modes and Scenes tabs.
 - 🎨 **45 preset colors + a color wheel**, HEX input and favorite colors.
 - 🔄 **In-app updates**: when a new version is out, an **Update** button appears in the header and a small notice shows in the quick panel. Read the release notes and download with one click; the file is verified, the app updates itself and restarts. You can also check manually with **Check for updates**.
-- 🌍 **English and Turkish**: the interface opens in English or Turkish depending on your Windows language; change it in **General → Dil / Language** and it applies instantly, without a restart.
-- 🚀 **Start with Windows**: starts quietly in the tray at sign-in.
+- 🌍 **English and Turkish**: the interface opens in English or Turkish depending on your system language; change it in **General → Dil / Language** and it applies instantly, without a restart.
+- 🚀 **Start with Windows**: starts quietly in the tray at sign-in. On a Mac, **Open at login** starts it in the menu bar only.
+- 🍎 **macOS (Apple Silicon)**: the same interface on the Mac: scenes, Screen sync, Audio (system audio or microphone), Spotify / Music, Rainbow, Fireplace, Daylight, timers, a menu bar icon, mini mode and in-app updates.
 
 ## 📸 Screenshots
 
@@ -69,24 +71,51 @@ This is my first project of its kind; I built every step of it, from the idea to
 
 ![Modes card](docs/screenshots/modlar-karti-en.png)
 
+**macOS**
+
+![Chiaro main window on macOS](docs/screenshots/mac-ana-pencere-en.png)
+
 ## ⬇️ Download
 
-Get the latest version from the **[Releases page](https://github.com/onurerensavci/chiaro/releases/latest)**: `Chiaro_v3.3.exe`.
-No installation needed; it's a single file with .NET included. Later versions can be updated from inside the app.
+Get the latest version from the **[Releases page](https://github.com/onurerensavci/chiaro/releases/latest)**:
+
+- **Windows:** `Chiaro_v3.5.exe`. No installation needed; it's a single file with .NET included.
+- **macOS:** `Chiaro_v3.5_mac.zip`. Open the zip and move **Chiaro.app** to your **Applications** folder.
+
+Later versions can be updated from inside the app. Each file's SHA-256 is in the release notes and in the `.sha256` file next to it.
 
 ## 🧰 Requirements
 
-- Windows 10 (2004 / 19041 or later) or Windows 11, 64-bit
-- A Bluetooth adapter with Bluetooth LE support
+- **Windows:** Windows 10 (2004 / 19041 or later) or Windows 11, 64-bit, with a Bluetooth adapter that supports Bluetooth LE
+- **macOS:** a Mac with Apple Silicon (M1 or later, arm64) running macOS 13 Ventura or later. Intel Macs aren't supported.
 - A Bluetooth-capable Philips Hue bulb (the ones with the Bluetooth symbol on the box)
 
 ## 🚦 First run
 
-1. Run `Chiaro_v3.3.exe`. Because the app isn't signed, Windows SmartScreen may show a warning:
+### Windows
+
+1. Run `Chiaro_v3.5.exe`. Because the app isn't signed, Windows SmartScreen may show a warning:
    **More info → Run anyway**.
 2. Turn the bulb on and bring it close to the computer. The bulb needs to be discoverable over Bluetooth. If needed, make it visible in the Hue app on your phone under
    *Settings → Voice assistants → Make visible*, and turn off the phone's Hue Bluetooth connection.
 3. Press **Scan**, pick your bulb and press **Connect**. From then on it connects automatically.
+
+### macOS
+
+1. Open `Chiaro_v3.5_mac.zip` and move **Chiaro.app** to the **Applications** folder (open at login and in-app updates work best from there).
+2. Because the app isn't signed and notarized by Apple, macOS shows a *"Chiaro" cannot be verified* warning the first time:
+   - **macOS 15 Sequoia and later:** press **Done**, then go to **System Settings → Privacy & Security**, scroll down and press **Open Anyway** next to "Chiaro was blocked", then confirm.
+   - **macOS 14 Sonoma and earlier:** **right-click (Control-click) Chiaro → Open**, then **Open** again.
+3. **Scan** → pick your bulb → **Connect**. macOS asks for Bluetooth permission on the first scan.
+
+#### macOS permissions
+
+- **Bluetooth:** to find and control the bulb (asked on the first scan).
+- **Screen & System Audio Recording:** for Screen sync and the *System audio* source of the Audio mode. Turn on Chiaro under **System Settings → Privacy & Security → Screen & System Audio Recording** (*Screen Recording* on macOS 14 and earlier), then restart Chiaro. Nothing is recorded; only the average color and the sound level are read.
+- **Microphone:** when the Audio mode's source is *Microphone*.
+- **Automation:** for the Spotify mode, to read the current track and cover from Spotify (or Music).
+
+If you denied a permission by mistake, Chiaro shows a notice in that mode with a button that opens the right settings page.
 
 ## ⚠️ Known limitations
 
@@ -96,8 +125,9 @@ No installation needed; it's a single file with .NET included. Later versions ca
 - Screen and audio sync speed is limited by Bluetooth (about 20 updates per second).
 - Spotify / music mode works with players that provide a Windows media session.
 - The notification light polls the Windows notification database read-only; it reads only the app name, never the content.
-- The app isn't code-signed (hence the SmartScreen warning).
-- Settings are stored in `%LOCALAPPDATA%\HueBluetooth` .
+- The app isn't code-signed (hence the SmartScreen warning on Windows and the Gatekeeper warning on a Mac).
+- Settings are stored in `%LOCALAPPDATA%\HueBluetooth` on Windows and `~/Library/Application Support/HueBluetooth` on a Mac.
+- On a Mac there's no notification light or scroll-wheel brightness yet. The Spotify mode on a Mac reads the Spotify desktop app (and optionally Apple Music). DRM-protected videos may show as black in screen capture.
 - The update check asks GitHub only for the latest release, at most once a day at startup; no other data is sent. The folder containing the exe must be writable (e.g. Documents or Desktop).
 
 ## 🛠️ Building from source
@@ -111,6 +141,13 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 ```
 
 Output: `bin/Release/net10.0-windows10.0.19041.0/win-x64/publish/Chiaro.exe`
+
+macOS package (on Linux or a Mac; ad-hoc signing needs [rcodesign](https://github.com/indygreg/apple-platform-rs)):
+
+```bash
+cd chiaro/src/ChiaroMac
+Packaging/build-mac.sh artifacts artifacts/Chiaro_mac.zip
+```
 
 ## 💬 Feedback
 

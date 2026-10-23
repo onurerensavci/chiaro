@@ -11,7 +11,7 @@ namespace HueStudio;
 internal static class Program
 {
 	public static string Version =>
-		typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion?.Split('+')[0] ?? "3.4.0";
+		typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion?.Split('+')[0] ?? "3.5.0";
 
 	[STAThread]
 	public static int Main(string[] args)
