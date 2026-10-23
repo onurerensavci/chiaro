@@ -1,0 +1,244 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HueStudio.App"
+             Name="Chiaro"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+          <Color x:Key="BgTopColor">#1B1F2E</Color>
+          <Color x:Key="BgBottomColor">#262236</Color>
+          <SolidColorBrush x:Key="CardBg" Color="#B8343A4A" />
+          <SolidColorBrush x:Key="CardBorder" Color="#2EFFFFFF" />
+          <SolidColorBrush x:Key="InnerBg" Color="#1CFFFFFF" />
+          <SolidColorBrush x:Key="InnerBorder" Color="#1FFFFFFF" />
+          <SolidColorBrush x:Key="PillBg" Color="#26FFFFFF" />
+          <SolidColorBrush x:Key="PillBgHover" Color="#3AFFFFFF" />
+          <SolidColorBrush x:Key="PillBorder" Color="#24FFFFFF" />
+          <SolidColorBrush x:Key="TextMain" Color="#F3F5F9" />
+          <SolidColorBrush x:Key="TextSub" Color="#9CA5B8" />
+          <SolidColorBrush x:Key="TextAccent" Color="#64B5FF" />
+          <SolidColorBrush x:Key="TrackBg" Color="#40FFFFFF" />
+          <SolidColorBrush x:Key="TileSelected" Color="#2A0A84FF" />
+          <SolidColorBrush x:Key="DockBg" Color="#CC2B303D" />
+          <SolidColorBrush x:Key="BlobA" Color="#55FF9A3C" />
+          <SolidColorBrush x:Key="BlobB" Color="#334E5BFF" />
+          <SolidColorBrush x:Key="BadgeGreenBg" Color="#2230D158" />
+          <SolidColorBrush x:Key="BadgeGreenFg" Color="#5BE584" />
+          <SolidColorBrush x:Key="ThumbBorder" Color="#00000000" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+          <Color x:Key="BgTopColor">#F4F0EE</Color>
+          <Color x:Key="BgBottomColor">#ECEEF6</Color>
+          <SolidColorBrush x:Key="CardBg" Color="#E6FFFFFF" />
+          <SolidColorBrush x:Key="CardBorder" Color="#14000000" />
+          <SolidColorBrush x:Key="InnerBg" Color="#FFFFFFFF" />
+          <SolidColorBrush x:Key="InnerBorder" Color="#16000000" />
+          <SolidColorBrush x:Key="PillBg" Color="#FFFFFFFF" />
+          <SolidColorBrush x:Key="PillBgHover" Color="#FFF0F2F7" />
+          <SolidColorBrush x:Key="PillBorder" Color="#1F000000" />
+          <SolidColorBrush x:Key="TextMain" Color="#1C1C1E" />
+          <SolidColorBrush x:Key="TextSub" Color="#6B7280" />
+          <SolidColorBrush x:Key="TextAccent" Color="#0A6CD8" />
+          <SolidColorBrush x:Key="TrackBg" Color="#24000000" />
+          <SolidColorBrush x:Key="TileSelected" Color="#1A0A84FF" />
+          <SolidColorBrush x:Key="DockBg" Color="#EEFFFFFF" />
+          <SolidColorBrush x:Key="BlobA" Color="#40FFB27A" />
+          <SolidColorBrush x:Key="BlobB" Color="#26A8B4FF" />
+          <SolidColorBrush x:Key="BadgeGreenBg" Color="#1A30D158" />
+          <SolidColorBrush x:Key="BadgeGreenFg" Color="#1E9E4A" />
+          <SolidColorBrush x:Key="ThumbBorder" Color="#38000000" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+      <SolidColorBrush x:Key="Accent" Color="#0A84FF" />
+      <SolidColorBrush x:Key="Green" Color="#30D158" />
+      <!-- Fluent denetim renkleri -->
+      <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#30D158" />
+      <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3ADB63" />
+      <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#28B84C" />
+      <SolidColorBrush x:Key="SliderTrackValueFill" Color="#0A84FF" />
+      <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#2A94FF" />
+      <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#0A74E0" />
+      <SolidColorBrush x:Key="SliderThumbBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#F0F0F0" />
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+
+    <Style Selector="Window">
+      <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+    </Style>
+    <Style Selector="TextBlock.sub">
+      <Setter Property="Foreground" Value="{DynamicResource TextSub}" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="TextBlock.h1">
+      <Setter Property="FontSize" Value="19" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="TextBlock.h2">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.caps">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSub}" />
+    </Style>
+    <Style Selector="TextBlock.value">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextAccent}" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Padding" Value="18,14" />
+      <Setter Property="Margin" Value="0,0,0,12" />
+      <Setter Property="BoxShadow" Value="0 6 22 0 #26000000" />
+    </Style>
+    <Style Selector="Border.inner">
+      <Setter Property="Background" Value="{DynamicResource InnerBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource InnerBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="12,10" />
+    </Style>
+
+    <!-- Hap düğmeler -->
+    <Style Selector="Button.pill">
+      <Setter Property="Background" Value="{DynamicResource PillBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource PillBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.pill:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource PillBgHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource PillBorder}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="14,6" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2A94FF" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
+    <!-- Renk yuvarlakları -->
+    <Style Selector="Button.swatch">
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="24" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,7,7" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#40FFFFFF" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.swatch:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="White" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <!-- Sahne / mod kutucukları -->
+    <Style Selector="Button.tile">
+      <Setter Property="Background" Value="{DynamicResource InnerBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource InnerBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Margin" Value="0,0,8,8" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+    </Style>
+    <Style Selector="Button.tile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource PillBgHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource PillBorder}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMain}" />
+    </Style>
+    <Style Selector="Button.tile.selected">
+      <Setter Property="Background" Value="{DynamicResource TileSelected}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+    <Style Selector="Button.tile.soon">
+      <Setter Property="Opacity" Value="0.55" />
+    </Style>
+
+    <Style Selector="ToggleButton.day">
+      <Setter Property="MinWidth" Value="30" />
+      <Setter Property="Height" Value="24" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Margin" Value="0,0,5,0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ToggleButton.day:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource Accent}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="Slider">
+      <Setter Property="Margin" Value="0,-6,0,-6" />
+    </Style>
+    <Style Selector="Slider.white /template/ RepeatButton#PART_DecreaseButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Slider.white /template/ RepeatButton#PART_IncreaseButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Slider.white:pointerover /template/ RepeatButton#PART_DecreaseButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Slider.white:pointerover /template/ RepeatButton#PART_IncreaseButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="30" />
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="30" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+  </Application.Styles>
+
+</Application>

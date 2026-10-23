@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);CHIARO_MAC;CHIARO_TESTS</DefineConstants>
+    <NoWarn>$(NoWarn);CS8632;CS0414</NoWarn>
+  </PropertyGroup>
+  <!-- Uygulama projesine referans vermek yerine (Avalonia + RID'li exe) mantık dosyaları doğrudan derlenir. -->
+  <ItemGroup>
+    <Compile Include="../Chiaro/Core/Protocol.cs" Link="Shared/Protocol.cs" />
+    <Compile Include="../Chiaro/Core/Strings.cs" Link="Shared/Strings.cs" />
+    <Compile Include="../ChiaroMac/Ble/Gatt.cs" Link="Mac/Gatt.cs" />
+    <Compile Include="../ChiaroMac/Ble/HueGattTransport.cs" Link="Mac/HueGattTransport.cs" />
+    <Compile Include="../ChiaroMac/Ble/DemoBackend.cs" Link="Mac/DemoBackend.cs" />
+    <Compile Include="../ChiaroMac/Ble/ObjC.cs" Link="Mac/ObjC.cs" />
+    <Compile Include="../ChiaroMac/Core/Lamp.cs" Link="Mac/Lamp.cs" />
+    <Compile Include="../ChiaroMac/Core/Loc.cs" Link="Mac/Loc.cs" />
+    <Compile Include="../ChiaroMac/Core/MacStrings.cs" Link="Mac/MacStrings.cs" />
+    <Compile Include="../ChiaroMac/Core/Log.cs" Link="Mac/Log.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+</Project>

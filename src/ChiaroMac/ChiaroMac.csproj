@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Chiaro macOS (Apple Silicon) — Avalonia arayüzü + CoreBluetooth (Objective-C runtime üzerinden, Xcode gerektirmez).
+       Windows projesindeki (../Chiaro) protokol, metinler, sahneler ve efekt motorları dosya bağlantısıyla aynen kullanılır;
+       Windows kaynağında hiçbir değişiklik yoktur. -->
+  <PropertyGroup>
+    <AssemblyName>Chiaro</AssemblyName>
+    <RootNamespace>HueStudio</RootNamespace>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifiers>osx-arm64;linux-x64</RuntimeIdentifiers>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);CHIARO_MAC</DefineConstants>
+    <Version>3.4.0</Version>
+    <InformationalVersion>3.4.0-mac-test1</InformationalVersion>
+    <AssemblyVersion>3.4.0.0</AssemblyVersion>
+    <FileVersion>3.4.0.0</FileVersion>
+    <Product>Chiaro</Product>
+    <Company>Chiaro</Company>
+    <AssemblyTitle>Chiaro</AssemblyTitle>
+    <Description>Chiaro — Philips Hue Bluetooth ampuller için bağımsız bir uygulama (macOS test sürümü)</Description>
+    <NeutralLanguage>tr-TR</NeutralLanguage>
+    <SatelliteResourceLanguages>tr</SatelliteResourceLanguages>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <SelfContained>true</SelfContained>
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Kişisel yol bilgisi derlemeye girmesin (Windows yapısındaki gibi). -->
+    <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/..'))=/src</PathMap>
+    <NoWarn>$(NoWarn);CS1591;CA1416</NoWarn>
+  </PropertyGroup>
+
+  <!-- Windows projesinden aynen paylaşılan, platformdan bağımsız çekirdek -->
+  <ItemGroup>
+    <Compile Include="../Chiaro/Core/Protocol.cs" Link="Shared/Protocol.cs" />
+    <Compile Include="../Chiaro/Core/Strings.cs" Link="Shared/Strings.cs" />
+    <Compile Include="../Chiaro/Core/Daylight.cs" Link="Shared/Daylight.cs" />
+    <Compile Include="../Chiaro/Core/StudioSettings.cs" Link="Shared/StudioSettings.cs" />
+    <Compile Include="../Chiaro/Core/Scenes.cs" Link="Shared/Scenes.cs" />
+    <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+  </ItemGroup>
+</Project>
