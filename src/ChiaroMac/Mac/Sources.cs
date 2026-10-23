@@ -148,12 +148,12 @@ internal sealed class MacScreenSource : IScreenSource
 		if (stream != null && stream.StopError != null)
 		{
 			AppLog.Write("Ekran akışı yeniden başlatılıyor: " + stream.StopError);
-			stream.Dispose();
+			await SckStream.StopAsync(stream);
 			stream = null;
 		}
 		if (stream == null || key != want)
 		{
-			stream?.Dispose();
+			if (stream != null) await SckStream.StopAsync(stream);
 			stream = null;
 			var r = ScreenMath.Region(0, 0, d.Width, d.Height, area);
 			(int w, int h) = ScreenMath.OutputSize(r.W, r.H);
@@ -181,10 +181,12 @@ internal sealed class MacScreenSource : IScreenSource
 		throw new InvalidOperationException(MacStrings.Tr["mac_screen_failed"]);
 	}
 
+	/// <summary>Akışı arayüz iş parçacığını bekletmeden durdurur (mod değişimi / çıkış).</summary>
 	public void Dispose()
 	{
-		stream?.Dispose();
+		SckStream? s = stream;
 		stream = null;
+		if (s != null) _ = SckStream.StopAsync(s);
 	}
 }
 
@@ -223,8 +225,9 @@ internal sealed class MacSystemAudio : IAudioSource
 
 	public void Dispose()
 	{
-		stream?.Dispose();
+		SckStream? s = stream;
 		stream = null;
+		if (s != null) _ = SckStream.StopAsync(s);
 	}
 }
 

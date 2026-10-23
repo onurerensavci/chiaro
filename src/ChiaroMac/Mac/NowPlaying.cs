@@ -32,7 +32,9 @@ internal sealed class MacNowPlaying : INowPlaying
 	private MColor? lastColor;
 	private readonly string artFile = Path.Combine(Path.GetTempPath(), "chiaro-cover.dat");
 
+	// "is running" denetimi: uygulama denetimle sorgu arasında kapanırsa AppleScript onu yeniden başlatmasın.
 	internal const string SpotifyScript = """
+		if application id "com.spotify.client" is not running then return "stopped"
 		tell application id "com.spotify.client"
 			set s to player state as string
 			if s is "stopped" then return "stopped"
@@ -42,6 +44,7 @@ internal sealed class MacNowPlaying : INowPlaying
 		""";
 
 	internal static string MusicScript(string? artPath) => """
+		if application id "com.apple.Music" is not running then return "stopped"
 		tell application id "com.apple.Music"
 			set s to player state as string
 			if s is "stopped" then return "stopped"

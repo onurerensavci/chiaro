@@ -34,6 +34,11 @@ public sealed class CoreBluetoothBackend : IGattBackend
 	private Action<Advert>? scanSink;
 	private readonly Dictionary<string, IntPtr> peripherals = new Dictionary<string, IntPtr>(StringComparer.OrdinalIgnoreCase);
 	private readonly Dictionary<IntPtr, MacPeripheral> active = new Dictionary<IntPtr, MacPeripheral>();
+	/// <summary>
+	/// cancelPeripheralConnection: çağrılmış, didDisconnectPeripheral yankısı henüz gelmemiş çevre birimleri. Yankı gelmeden aynı
+	/// ampule yeniden bağlanılırsa, eski bağlantının kapanma bildirimi yeni bağlantıyı düşürmesin diye beklenir/yutulur.
+	/// </summary>
+	private readonly Dictionary<IntPtr, TaskCompletionSource> cancelling = new Dictionary<IntPtr, TaskCompletionSource>();
 
 	public string Name => "CoreBluetooth";
 
@@ -192,6 +197,18 @@ public sealed class CoreBluetoothBackend : IGattBackend
 			p = Queue.Run(() => Lookup(id));
 			if (p == IntPtr.Zero) throw new GattException(GattFailure.UnknownDevice, "Çevre birimi bulunamadı: …" + HueGattTransport.Tail(id));
 		}
+		// Aynı ampulün önceki bağlantısı az önce kapatıldıysa (Yenile / yeniden bağlan) kapanma yankısını bekle.
+		Task? closing = Queue.Run(() => cancelling.TryGetValue(p, out TaskCompletionSource? t) ? t.Task : null);
+		if (closing != null)
+		{
+			Task done = await Task.WhenAny(closing, Task.Delay(TimeSpan.FromSeconds(3), ct));
+			ct.ThrowIfCancellationRequested();
+			if (done != closing)
+			{
+				connectLog("CoreBluetooth: önceki bağlantının kapanışı 3 sn içinde bildirilmedi; devam ediliyor");
+				Queue.Run(() => cancelling.Remove(p));
+			}
+		}
 		MacPeripheral mp = new MacPeripheral(this, p, id);
 		Queue.Run(() =>
 		{
@@ -259,20 +276,35 @@ public sealed class CoreBluetoothBackend : IGattBackend
 
 	internal static Guid FromCBUUID(IntPtr cbuuid) => BleUuid.Parse(ToStr(Send(cbuuid, Sel("UUIDString"))) ?? "0000");
 
-	internal void CancelConnection(IntPtr p)
+	internal void CancelConnection(IntPtr p, MacPeripheral owner)
 	{
 		if (central == IntPtr.Zero) return;
 		Queue.Run(() =>
 		{
-			active.Remove(p);
+			// Yalnızca bu bağlantıya aitse kaldır (aynı ampule yeni bir bağlantı kaydedilmiş olabilir).
+			if (active.TryGetValue(p, out MacPeripheral? cur) && ReferenceEquals(cur, owner)) active.Remove(p);
+			else if (active.ContainsKey(p)) return;
+			// 0 = bağlı değil: kapanma bildirimi gelmez. Diğer durumlarda didDisconnectPeripheral yankısı beklenir.
+			if (SendNInt(p, Sel("state")) != 0 && !cancelling.ContainsKey(p)) cancelling[p] = NewTcs();
 			SendVoid(central, Sel("cancelPeripheralConnection:"), p);
 		});
+	}
+
+	/// <summary>Kuyrukta çağrılır. Bu kapanma, bizim iptal ettiğimiz bir bağlantının yankısıysa true.</summary>
+	private bool TakeCancelEcho(IntPtr p)
+	{
+		if (!cancelling.Remove(p, out TaskCompletionSource? t)) return false;
+		t.TrySetResult();
+		return true;
 	}
 
 	public void Dispose()
 	{
 		// Merkez yönetici uygulama boyunca yaşar; bağlantılar MacPeripheral.Dispose ile kapanır.
-		foreach (MacPeripheral mp in active.Values.ToList()) mp.Dispose();
+		if (queue == null) return;
+		List<MacPeripheral> list;
+		try { list = queue.Run(() => active.Values.ToList()); } catch { return; }
+		foreach (MacPeripheral mp in list) mp.Dispose();
 	}
 
 	// ------------------------------------------------------------------ geri çağrılar (GCD kuyruğunda)
@@ -309,6 +341,8 @@ public sealed class CoreBluetoothBackend : IGattBackend
 		if (s != StatePoweredOn)
 		{
 			foreach (MacPeripheral mp in b.active.Values.ToList()) mp.OnDisconnected("Bluetooth " + StateName(s));
+			// Bluetooth kapandı/sıfırlandı: bekleyen iptal yankıları artık gelmez.
+			foreach (IntPtr p in b.cancelling.Keys.ToList()) b.TakeCancelEcho(p);
 		}
 	});
 
@@ -344,6 +378,7 @@ public sealed class CoreBluetoothBackend : IGattBackend
 	{
 		var e = Error(error);
 		instance?.log($"CoreBluetooth: bağlantı başarısız: {e.Domain} {e.Code} {e.Description}");
+		if (instance != null && instance.TakeCancelEcho(peripheral)) return;
 		Find(peripheral)?.Connected.TrySetException(GattException.FromNSError(e.Domain ?? "CBErrorDomain", e.Domain == null ? 10 : e.Code, e.Description));
 	});
 
@@ -351,6 +386,11 @@ public sealed class CoreBluetoothBackend : IGattBackend
 	private static void DidDisconnect(IntPtr self, IntPtr cmd, IntPtr centralManager, IntPtr peripheral, IntPtr error) => Guard("disconnect", () =>
 	{
 		var e = Error(error);
+		if (instance != null && instance.TakeCancelEcho(peripheral))
+		{
+			instance.log("CoreBluetooth: bağlantı kapatıldı (istekle)");
+			return;
+		}
 		instance?.log($"CoreBluetooth: bağlantı koptu: {e.Domain} {e.Code} {e.Description}");
 		MacPeripheral? mp = Find(peripheral);
 		if (mp == null) return;
@@ -578,7 +618,7 @@ internal sealed class MacPeripheral : IGattPeripheral
 			{
 				OnDisconnected("kapatıldı");
 			});
-			owner.CancelConnection(peripheral);
+			owner.CancelConnection(peripheral, this);
 		}
 		catch
 		{

@@ -343,10 +343,26 @@ internal sealed class SckStream : IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Durdurmayı iş parçacığı havuzunda yapar: stopCapture tamamlanmasını beklemek (en çok 2 sn) arayüzü dondurmasın.
+	/// </summary>
+	public static Task StopAsync(SckStream s) => Task.Run(() =>
+	{
+		try
+		{
+			s.Dispose();
+		}
+		catch (Exception ex)
+		{
+			AppLog.Write("Yakalama durdurma: " + ex.Message);
+		}
+	});
+
 	public void Dispose()
 	{
 		IntPtr st = Interlocked.Exchange(ref stream, IntPtr.Zero);
 		IntPtr outp = output;
+		bool stoppedCleanly = true;
 		if (st != IntPtr.Zero)
 		{
 			IntPtr pool = Pool();
@@ -355,7 +371,7 @@ internal sealed class SckStream : IDisposable
 				TaskCompletionSource<IntPtr> stopped = new TaskCompletionSource<IntPtr>(TaskCreationOptions.RunContinuationsAsynchronously);
 				SendVoid(st, Sel("stopCaptureWithCompletionHandler:"), ObjcBlock.ErrorOnly(stopped));
 				// Durdurma eşzamansız; kısa bekleriz ki son kareler serbest bırakılmış nesneye gelmesin.
-				stopped.Task.Wait(TimeSpan.FromSeconds(2));
+				stoppedCleanly = stopped.Task.Wait(TimeSpan.FromSeconds(2));
 			}
 			catch (Exception ex)
 			{
@@ -371,7 +387,9 @@ internal sealed class SckStream : IDisposable
 		{
 			live.TryRemove(outp, out _);
 			output = IntPtr.Zero;
-			Release(outp);
+			// Durdurma 2 sn'de onaylanmadıysa geç gelen bir kare serbest bırakılmış nesneye gitmesin: küçük çıktı nesnesi bilerek tutulur.
+			if (stoppedCleanly) Release(outp);
+			else AppLog.Write("Ekran yakalama durdurması onaylanmadı; çıktı nesnesi serbest bırakılmadı.");
 		}
 	}
 }

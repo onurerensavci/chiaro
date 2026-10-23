@@ -330,7 +330,41 @@ public partial class MainWindow : Window
 			StateText.Text = L.T("not_connected_dot");
 			UpdateBulbVisual();
 			UpdateControls();
+			AutoReconnect(connectedKey);
 		}
+	}
+
+	// =====================================================================
+	//  Beklenmeyen kopmadan sonra (Mac uykudan uyandı, ampul elektrikten çekilip takıldı, menzil dışı)
+	//  son ampule kendiliğinden yeniden bağlanma. Kullanıcı tara/bağlan/kes/unut/iptal derse durur.
+	// =====================================================================
+
+	private int reconnectGeneration;
+	internal static readonly int[] ReconnectDelaysSeconds = { 3, 10, 30, 60, 120, 300 };
+
+	private void StopAutoReconnect() => reconnectGeneration++;
+
+	private async void AutoReconnect(string key)
+	{
+		if (string.IsNullOrEmpty(key) || closed) return;
+		int gen = ++reconnectGeneration;
+		Log("Kendiliğinden yeniden bağlanma planlandı.");
+		foreach (int delay in ReconnectDelaysSeconds)
+		{
+			await Task.Delay(TimeSpan.FromSeconds(delay));
+			if (gen != reconnectGeneration || closed || ble.Ready) return;
+			if (busy || Devices.SelectedItem is not Lamp lamp || lamp.Key != key) continue;
+			Log($"Kendiliğinden yeniden bağlanma denemesi ({delay} sn sonra).");
+			ScanSummary.Text = L.T("reconnecting_last");
+			await ConnectSelected(lamp);
+			if (gen != reconnectGeneration || closed) return;
+			if (ble.Ready)
+			{
+				ScanSummary.Text = L.T("connected_dot");
+				return;
+			}
+		}
+		if (gen == reconnectGeneration && !closed && !ble.Ready) ScanSummary.Text = L.T("connect_failed_retry");
 	}
 
 	private async Task<bool> Run(string title, Func<CancellationToken, Task> action, int seconds = 35)
@@ -400,6 +434,7 @@ public partial class MainWindow : Window
 	private void Cancel_Click(object? sender, RoutedEventArgs e)
 	{
 		autoCancelled = true;
+		StopAutoReconnect();
 		operation?.Cancel();
 	}
 
@@ -410,6 +445,7 @@ public partial class MainWindow : Window
 	private async void Scan_Click(object? sender, RoutedEventArgs e)
 	{
 		autoCancelled = true;
+		StopAutoReconnect();
 		await ScanAsync();
 	}
 
@@ -471,6 +507,7 @@ public partial class MainWindow : Window
 	private async void Connect_Click(object? sender, RoutedEventArgs e)
 	{
 		autoCancelled = true;
+		StopAutoReconnect();
 		if (Devices.SelectedItem is Lamp lamp) await ConnectSelected(lamp);
 	}
 
@@ -534,6 +571,7 @@ public partial class MainWindow : Window
 	private async void Disconnect_Click(object? sender, RoutedEventArgs e)
 	{
 		autoCancelled = true;
+		StopAutoReconnect();
 		await Run(L.T("disconnecting"), _ =>
 		{
 			ble.Disconnect();
@@ -614,6 +652,7 @@ public partial class MainWindow : Window
 	private async void Forget_Click(object? sender, RoutedEventArgs e)
 	{
 		autoCancelled = true;
+		StopAutoReconnect();
 		try
 		{
 			if (File.Exists(LampPath)) File.Delete(LampPath);

@@ -26,6 +26,8 @@ public partial class MainWindow
 
 	private void InitMacExtras()
 	{
+		// Uygulama taşındıysa (ör. İndirilenler → Uygulamalar) oturum açılışı kaydındaki yolu düzelt.
+		if (OperatingSystem.IsMacOS()) LoginItem.Refresh();
 		AutostartBox.IsChecked = OperatingSystem.IsMacOS() && LoginItem.IsEnabled();
 		AutostartBox.IsEnabled = OperatingSystem.IsMacOS();
 		AutoUpdateBox.IsChecked = macPrefs.AutoUpdateCheck;
@@ -43,6 +45,7 @@ public partial class MainWindow
 			return;
 		}
 		DetailText.Text = L.T(want ? "autostart_tip" : "autostart");
+		if (want && OperatingSystem.IsMacOS() && !LoginItem.IsInApplications(LoginItem.BundlePath())) DetailText.Text = L.T("mac_move_to_apps_hint");
 		Log("Oturum açılışında başlat: " + (want ? "açık" : "kapalı"));
 	}
 
@@ -260,7 +263,9 @@ public partial class MainWindow
 		};
 		w.Opened += (_, _) =>
 		{
-			if (macPrefs.MiniLeft is double x && macPrefs.MiniTop is double y)
+			// Kayıtlı konum hâlâ bağlı bir ekranın içindeyse kullan (ikinci monitör çıkarıldıysa çubuk ekran dışında kalmasın).
+			if (macPrefs.MiniLeft is double x && macPrefs.MiniTop is double y
+				&& w.Screens.All.Any(sc => sc.Bounds.Contains(new PixelPoint((int)x + 20, (int)y + 10))))
 			{
 				w.Position = new PixelPoint((int)x, (int)y);
 			}

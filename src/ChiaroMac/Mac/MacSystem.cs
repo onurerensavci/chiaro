@@ -80,6 +80,55 @@ public static class LoginItem
 
 	public static bool IsEnabled() => File.Exists(PlistPath);
 
+	/// <summary>/Applications ya da ~/Applications altında mı? (İndirilenler'den çalışıyorsa taşınınca oturum açılışı bozulur.)</summary>
+	public static bool IsInApplications(string? bundle, string? home = null)
+	{
+		if (bundle == null) return false;
+		home ??= Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+		return bundle.StartsWith("/Applications/", StringComparison.Ordinal)
+			|| (!string.IsNullOrEmpty(home) && bundle.StartsWith(Path.Combine(home, "Applications") + "/", StringComparison.Ordinal));
+	}
+
+	/// <summary>Kayıtlı LaunchAgent'taki uygulama yolu (yoksa null).</summary>
+	public static string? RegisteredBundle(string? plistText = null)
+	{
+		try
+		{
+			plistText ??= File.Exists(PlistPath) ? File.ReadAllText(PlistPath) : null;
+			if (plistText == null) return null;
+			Match m = Regex.Match(plistText, @"<string>-a</string>\s*<string>([^<]*)</string>");
+			return m.Success ? System.Net.WebUtility.HtmlDecode(m.Groups[1].Value) : null;
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	/// <summary>
+	/// Açılışta çağrılır: oturum açılışı açıksa ve uygulama başka bir yere taşınmışsa (ör. İndirilenler → Uygulamalar)
+	/// LaunchAgent'taki yolu günceller. App Translocation'daki geçici yol asla yazılmaz. Değiştiyse true.
+	/// </summary>
+	public static bool Refresh()
+	{
+		try
+		{
+			if (!IsEnabled()) return false;
+			string? bundle = BundlePath();
+			if (bundle == null || IsTranslocated(bundle)) return false;
+			string? old = RegisteredBundle();
+			if (old == bundle && File.ReadAllText(PlistPath) == Plist(bundle)) return false;
+			File.WriteAllText(PlistPath, Plist(bundle));
+			AppLog.Write("Oturum açılışı: uygulama yolu güncellendi.");
+			return true;
+		}
+		catch (Exception ex)
+		{
+			AppLog.Write("Oturum açılışı yolu güncellenemedi: " + ex.Message);
+			return false;
+		}
+	}
+
 	public static string Plist(string bundle) => $"""
 		<?xml version="1.0" encoding="UTF-8"?>
 		<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -98,8 +147,12 @@ public static class LoginItem
 			</array>
 			<key>RunAtLoad</key>
 			<true/>
+			<key>LimitLoadToSessionType</key>
+			<string>Aqua</string>
 			<key>ProcessType</key>
 			<string>Interactive</string>
+			<key>AssociatedBundleIdentifiers</key>
+			<string>{Label}</string>
 		</dict>
 		</plist>
 		""";
@@ -128,7 +181,7 @@ public static class LoginItem
 	}
 }
 
-public sealed record MacUpdate(string Version, string Tag, string AssetName, string AssetUrl, long Size, string? Sha256, string PageUrl, string Notes);
+public sealed record MacUpdate(string Version, string Tag, string AssetName, string AssetUrl, long Size, string? Sha256, string PageUrl, string Notes, string? ShaUrl = null);
 
 /// <summary>
 /// GitHub Releases'te Mac paketi arar: Chiaro_vX.Y[.Z]_mac.zip. Yalnızca .exe olan sürümler Mac için "güncelleme yok" sayılır.
@@ -183,7 +236,18 @@ public static class MacUpdater
 			string? sha = digest != null && digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? digest[7..].ToLowerInvariant() : null;
 			string page = r.TryGetProperty("html_url", out JsonElement h) ? h.GetString() ?? "" : "https://github.com/" + Repo + "/releases";
 			string notes = r.TryGetProperty("body", out JsonElement b) ? b.GetString() ?? "" : "";
-			return (new MacUpdate($"{latest.Major}.{latest.Minor}" + (latest.Build > 0 ? $".{latest.Build}" : ""), tag, name, url, size, sha, page, notes), "mac_upd_available");
+			// GitHub "digest" alanı yoksa (eski yüklemeler) yanındaki "<ad>.sha256" dosyası kullanılır (Windows sürümündeki gibi).
+			string? shaUrl = null;
+			if (sha == null)
+			{
+				foreach (JsonElement a2 in assets.EnumerateArray())
+				{
+					string n2 = a2.TryGetProperty("name", out JsonElement nn) ? nn.GetString() ?? "" : "";
+					string u2 = a2.TryGetProperty("browser_download_url", out JsonElement uu) ? uu.GetString() ?? "" : "";
+					if (string.Equals(n2, name + ".sha256", StringComparison.OrdinalIgnoreCase) && u2.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) shaUrl = u2;
+				}
+			}
+			return (new MacUpdate($"{latest.Major}.{latest.Minor}" + (latest.Build > 0 ? $".{latest.Build}" : ""), tag, name, url, size, sha, page, notes, shaUrl), "mac_upd_available");
 		}
 		return (null, "mac_upd_no_mac");
 	}
@@ -214,6 +278,13 @@ public static class MacUpdater
 		string target = Path.Combine(dir, u.AssetName);
 		string temp = target + ".part";
 		using HttpClient c = Client();
+		string? expected = u.Sha256;
+		if (expected == null && u.ShaUrl != null)
+		{
+			expected = ParseSha(await c.GetStringAsync(u.ShaUrl, ct));
+			if (expected == null) throw new InvalidOperationException("SHA-256 dosyası okunamadı.");
+		}
+		if (expected == null) AppLog.Write("Güncelleme: SHA-256 bilgisi yok; yalnızca HTTPS'e güveniliyor.");
 		using (HttpResponseMessage resp = await c.GetAsync(u.AssetUrl, HttpCompletionOption.ResponseHeadersRead, ct))
 		{
 			resp.EnsureSuccessStatusCode();
@@ -230,10 +301,11 @@ public static class MacUpdater
 				if (total > 0) progress?.Report(done / (double)total);
 			}
 		}
-		if (u.Sha256 != null)
+		if (expected != null)
 		{
-			string got = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(temp))).ToLowerInvariant();
-			if (got != u.Sha256)
+			string got;
+			using (FileStream fs = File.OpenRead(temp)) got = Convert.ToHexString(await SHA256.HashDataAsync(fs, ct)).ToLowerInvariant();
+			if (got != expected)
 			{
 				File.Delete(temp);
 				throw new InvalidOperationException("İndirilen dosyanın SHA-256 değeri tutmuyor.");
@@ -241,5 +313,13 @@ public static class MacUpdater
 		}
 		File.Move(temp, target, overwrite: true);
 		return target;
+	}
+
+	/// <summary>"abc123…  Chiaro_v3.5_mac.zip" ya da yalnız özet → küçük harfli 64 hane; geçersizse null.</summary>
+	public static string? ParseSha(string? text)
+	{
+		if (string.IsNullOrWhiteSpace(text)) return null;
+		Match m = Regex.Match(text, @"\b([0-9a-fA-F]{64})\b");
+		return m.Success ? m.Groups[1].Value.ToLowerInvariant() : null;
 	}
 }

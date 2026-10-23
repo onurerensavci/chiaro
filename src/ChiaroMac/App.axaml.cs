@@ -14,6 +14,12 @@ public partial class App : Application
 	public override void Initialize()
 	{
 		AvaloniaXamlLoader.Load(this);
+		// "async void" olay işleyicilerinden kaçan hatalar uygulamayı çökertmesin: kayda yaz, sürdür.
+		Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
+		{
+			AppLog.Write("Arayüz iş parçacığında işlenmemiş hata (uygulama sürüyor): " + e.Exception);
+			e.Handled = true;
+		};
 		// Fluent şablonu Thumb kenarlığını 0'a sabitliyor; açık temada beyaz düğme kaybolmasın diye yerel değerle ince kenarlık veriyoruz.
 		Avalonia.Controls.Primitives.TemplatedControl.TemplateAppliedEvent.AddClassHandler<Slider>((s, e) =>
 		{
@@ -32,7 +38,10 @@ public partial class App : Application
 		{
 			MainWindow.StartHidden = desktop.Args?.Contains(LoginItem.BackgroundArgument) == true;
 			MainWindow w = new MainWindow();
-			desktop.MainWindow = w;
+			// Oturum açılışında (--background) pencere gösterilmemeli. Avalonia, Start sırasında desktop.MainWindow'u
+			// kendiliğinden Show() eder; bu yüzden gizli başlangıçta MainWindow ataması ana döngü başladıktan sonraya bırakılır.
+			if (MainWindow.StartHidden) Avalonia.Threading.Dispatcher.UIThread.Post(() => desktop.MainWindow ??= w);
+			else desktop.MainWindow = w;
 			desktop.ShutdownRequested += (_, _) => w.PrepareForExit();
 			try
 			{

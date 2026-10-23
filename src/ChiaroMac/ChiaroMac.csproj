@@ -14,7 +14,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);CHIARO_MAC</DefineConstants>
     <Version>3.4.0</Version>
-    <InformationalVersion>3.4.0-mac-test2</InformationalVersion>
+    <InformationalVersion>3.4.0-mac-test3</InformationalVersion>
     <AssemblyVersion>3.4.0.0</AssemblyVersion>
     <FileVersion>3.4.0.0</FileVersion>
     <Product>Chiaro</Product>
