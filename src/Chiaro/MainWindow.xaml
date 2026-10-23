@@ -1,0 +1,855 @@
+<Window xmlns:l="clr-namespace:HueStudio" x:Class="HueStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chiaro" Icon="Assets/Chiaro.ico"
+        Width="1220" Height="940" MinWidth="960" MinHeight="660"
+        Background="{DynamicResource Backdrop}" Foreground="{DynamicResource Text}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14"
+        WindowStartupLocation="CenterScreen"
+        TextOptions.TextFormattingMode="Display">
+  <Grid x:Name="RootGrid">
+    <!-- Sistem bulanıklığı varken yarı saydam renk katmanı -->
+    <Border Background="{DynamicResource BackdropTint}" IsHitTestVisible="False" />
+
+    <!-- Arka planda süzülen ışık lekeleri: biri ampulün canlı rengini izler -->
+    <Canvas x:Name="Blobs" IsHitTestVisible="False" ClipToBounds="True">
+      <Ellipse x:Name="BlobLive" Width="720" Height="720" Canvas.Left="-220" Canvas.Top="-260" Opacity="0.55" />
+      <Ellipse x:Name="BlobA" Width="640" Height="640" Canvas.Left="720" Canvas.Top="260" Opacity="0.40" />
+      <Ellipse x:Name="BlobB" Width="520" Height="520" Canvas.Left="300" Canvas.Top="560" Opacity="0.30" />
+    </Canvas>
+
+    <DockPanel Margin="26,18,26,18">
+      <!-- ÜST BAŞLIK -->
+      <DockPanel DockPanel.Dock="Top" Margin="4,0,4,14">
+        <StackPanel x:Name="HeaderActions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <Grid Margin="0,0,10,0" VerticalAlignment="Center">
+            <Button x:Name="UpdateButton" Margin="0" Click="UpdateButton_Click" ToolTip="{l:T hdr_check_updates_tip}">
+              <TextBlock x:Name="UpdateText" Text="{l:T hdr_check_updates}" TextWrapping="NoWrap" />
+            </Button>
+            <Ellipse x:Name="UpdateDot" Width="10" Height="10" Fill="#FF453A" Stroke="#F5F7FF" StrokeThickness="1.5" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0" Visibility="Collapsed" IsHitTestVisible="False" />
+          </Grid>
+          <Border Style="{StaticResource Pill}" Margin="0,0,10,0" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal">
+              <Ellipse x:Name="ConnDot" Width="8" Height="8" Fill="#FF9F0A" VerticalAlignment="Center" Margin="0,0,8,0" />
+              <TextBlock x:Name="ConnText" Text="{l:T not_connected}" FontSize="12" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" VerticalAlignment="Center" />
+            </StackPanel>
+          </Border>
+          <Button Content="Mini" Click="Mini_Click" ToolTip="{l:T hdr_mini_tip}" />
+          <Button Content="{l:T hdr_hide}" Margin="0" Click="Hide_Click" ToolTip="{l:T hdr_hide_tip}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Image Source="{StaticResource LogoImage}" Width="38" Height="38" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality">
+            <Image.Effect>
+              <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.35" Color="#2A1240" />
+            </Image.Effect>
+          </Image>
+          <TextBlock Text="Chiaro" FontSize="24" FontWeight="SemiBold" Margin="12,0,0,1" VerticalAlignment="Center" TextWrapping="NoWrap" />
+        </StackPanel>
+      </DockPanel>
+
+      <!-- DURUM ŞERİDİ -->
+      <ContentControl DockPanel.Dock="Top" Style="{StaticResource GlassCard}" Padding="18,12" Margin="0,0,0,14">
+        <DockPanel>
+          <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+            <Button x:Name="CancelButton" Content="{l:T cancel}" Visibility="Collapsed" Click="Cancel_Click" />
+            <Button x:Name="RefreshButton" Content="{l:T refresh}" IsEnabled="False" Click="Refresh_Click" />
+            <Button x:Name="DisconnectButton" Content="{l:T disconnect}" IsEnabled="False" Margin="0" Click="Disconnect_Click" />
+          </StackPanel>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock x:Name="StatusText" Text="{l:T status_connect_bulb}" FontWeight="SemiBold" />
+            <TextBlock x:Name="DetailText" Text="{l:T status_remembered}" FontSize="12" Foreground="{DynamicResource Muted}" Margin="0,3,0,0" />
+          </StackPanel>
+        </DockPanel>
+      </ContentControl>
+
+      <!-- ALT MENÜ (dock) -->
+      <ContentControl DockPanel.Dock="Bottom" Style="{StaticResource GlassCard}" Padding="14,10" Margin="0,14,0,0">
+        <DockPanel LastChildFill="True">
+          <!-- sol: mini güç + şu anki renk -->
+          <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+            <Button x:Name="DockPower" Width="44" Height="44" Padding="0" Margin="0,0,12,0" Click="PowerToggleQuick_Click" ToolTip="{l:T power_toggle}">
+              <Grid Width="22" Height="26">
+                <Path x:Name="DockBulb" Stretch="Uniform" Fill="#6B7385"
+                      Data="M50,5 C27,5 10,22 10,44 C10,58 17,68 26,76 C31,81 33,86 33,92 L67,92 C67,86 69,81 74,76 C83,68 90,58 90,44 C90,22 73,5 50,5 Z M35,98 L65,98 L65,104 L35,104 Z M38,108 L62,108 C60,114 55,117 50,117 C45,117 40,114 38,108 Z" />
+              </Grid>
+            </Button>
+            <Grid Width="30" Height="30" Margin="0,0,10,0" VerticalAlignment="Center">
+              <Ellipse x:Name="DockChipGlow" Margin="-6" Opacity="0" />
+              <Ellipse x:Name="DockChip" Stroke="#59FFFFFF" StrokeThickness="1" />
+            </Grid>
+            <StackPanel VerticalAlignment="Center" MinWidth="150">
+              <TextBlock x:Name="DockColorName" Text="{l:T no_color}" FontWeight="SemiBold" FontSize="13" TextWrapping="NoWrap" />
+              <TextBlock x:Name="DockDetail" Text="{l:T mode_manual}" FontSize="11" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" />
+            </StackPanel>
+            <Border Width="1" Background="{DynamicResource Stroke}" Margin="14,4" />
+          </StackPanel>
+          <!-- sağ: tema, cam, sürüm -->
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+            <Border Width="1" Background="{DynamicResource Stroke}" Margin="6,4,14,4" />
+            <StackPanel VerticalAlignment="Center" Margin="0,0,10,0">
+              <TextBlock Text="{l:T brightness}" FontSize="10" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" />
+              <TextBlock x:Name="DockBrightness" Text="%70" FontWeight="SemiBold" FontSize="13" TextWrapping="NoWrap" />
+            </StackPanel>
+            <Button x:Name="GlassButton" Style="{StaticResource Small}" Content="{l:T glass_on}" Click="Glass_Click" />
+            <Button x:Name="ThemeButton" Style="{StaticResource Small}" Content="{l:T theme_light}" Click="Theme_Click" />
+            <Button Style="{StaticResource HeaderButton}" Click="About_Click" ToolTip="{l:T about}" Margin="4,0,0,0" VerticalAlignment="Center">
+              <StackPanel>
+                <TextBlock x:Name="VersionLabel" Text="Chiaro 3.3" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" HorizontalAlignment="Right" />
+                <TextBlock Text="Onur Eren Savcı × Grok Bot" FontSize="10" Foreground="{DynamicResource Muted}" Opacity="0.75" TextWrapping="NoWrap" HorizontalAlignment="Right" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+          <!-- orta: hızlı renkler -->
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{l:T favorites_upper}" Style="{StaticResource SectionLabel}" FontSize="10" Margin="0,0,0,4" TextTrimming="CharacterEllipsis" />
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+              <StackPanel x:Name="QuickSwatches" Orientation="Horizontal" />
+            </ScrollViewer>
+          </StackPanel>
+        </DockPanel>
+      </ContentControl>
+
+      <!-- İÇERİK -->
+      <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,0">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="360" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="1.35*" />
+          </Grid.ColumnDefinitions>
+
+          <!-- SOL SÜTUN -->
+          <StackPanel Grid.Column="0">
+            <!-- Cihaz -->
+            <ContentControl Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="DeviceChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="device" Click="Section_Click" />
+                  <TextBlock x:Name="ScanSummary" DockPanel.Dock="Right" Text="{l:T device_hint}" FontSize="11" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" TextAlignment="Right" Margin="12,0,0,0" TextTrimming="CharacterEllipsis" />
+                  <Button Style="{StaticResource HeaderButton}" Tag="device" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock Text="{l:T device}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
+                </DockPanel>
+                <StackPanel x:Name="DeviceBody" Margin="0,10,0,0">
+                <ComboBox x:Name="Devices" AutomationProperties.Name="{l:T select_bulb}" SelectionChanged="Selection_Changed" Margin="0,0,0,10">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Display}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="Tail" Text="{Binding Tail}" Foreground="{DynamicResource Muted}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center" />
+                      </StackPanel>
+                      <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ComboBoxItem}, FallbackValue={x:Null}, TargetNullValue={x:Null}}" Value="{x:Null}">
+                          <Setter TargetName="Tail" Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                      </DataTemplate.Triggers>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <UniformGrid Columns="2">
+                  <Button x:Name="ScanButton" Content="{l:T scan}" Click="Scan_Click" />
+                  <Button x:Name="ConnectButton" Content="{l:T connect}" Style="{StaticResource Primary}" IsEnabled="False" Margin="0" Click="Connect_Click" />
+                </UniformGrid>
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <!-- Ampul (açılır/kapanır) -->
+            <ContentControl Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="BulbChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="bulb" Click="Section_Click" />
+                  <ToggleButton x:Name="PowerToggle" Style="{StaticResource Switch}" DockPanel.Dock="Right" IsEnabled="False" VerticalAlignment="Center" Margin="10,0,0,0" Click="PowerToggle_Click" AutomationProperties.Name="{l:T light_toggle}" ToolTip="{l:T power_toggle}" />
+                  <Button Style="{StaticResource HeaderButton}" Tag="bulb" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                    <StackPanel>
+                      <TextBlock Text="{l:T bulb_upper}" Style="{StaticResource SectionLabel}" />
+                      <TextBlock x:Name="LightTitle" Text="Hue" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </Button>
+                </DockPanel>
+
+                <StackPanel x:Name="BulbBody" Margin="0,8,0,0">
+                  <!-- Parlayan ampul -->
+                  <Grid Height="190" Margin="0,4,0,4">
+                    <Ellipse x:Name="BulbHalo" Width="210" Height="210" Opacity="0" RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
+                      <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="BulbHaloScale" ScaleX="0.8" ScaleY="0.8" />
+                      </Ellipse.RenderTransform>
+                    </Ellipse>
+                    <Button Style="{StaticResource HeaderButton}" HorizontalAlignment="Center" VerticalAlignment="Center" Click="PowerToggleQuick_Click" ToolTip="{l:T power_toggle}">
+                      <Viewbox Width="96" Height="118">
+                        <Canvas Width="100" Height="120">
+                          <Path x:Name="BulbGlass" Stroke="#73FFFFFF" StrokeThickness="1.5"
+                                Data="M50,5 C27,5 10,22 10,44 C10,58 17,68 26,76 C31,81 33,86 33,92 L67,92 C67,86 69,81 74,76 C83,68 90,58 90,44 C90,22 73,5 50,5 Z">
+                            <Path.Effect>
+                              <DropShadowEffect x:Name="BulbShadow" ShadowDepth="0" BlurRadius="0" Opacity="0" Color="White" />
+                            </Path.Effect>
+                          </Path>
+                          <Path Data="M28,26 C33,16 42,12 50,12" Stroke="#8CFFFFFF" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                          <Path x:Name="BulbFilament" Data="M40,90 L40,62 L45,54 L50,62 L55,54 L60,62 L60,90" Stroke="#8090A0" StrokeThickness="2.4" StrokeLineJoin="Round" />
+                          <Path Data="M35,96 L65,96 L65,103 L35,103 Z M36,106 L64,106 L64,112 L36,112 Z M42,114 L58,114 C56,118 44,118 42,114 Z">
+                            <Path.Fill>
+                              <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#8C95A6" Offset="0" />
+                                <GradientStop Color="#E6EAF0" Offset="0.45" />
+                                <GradientStop Color="#7A8394" Offset="1" />
+                              </LinearGradientBrush>
+                            </Path.Fill>
+                          </Path>
+                        </Canvas>
+                      </Viewbox>
+                    </Button>
+                  </Grid>
+                  <TextBlock x:Name="StateText" Text="{l:T not_connected_dot}" Foreground="{DynamicResource Muted}" FontSize="12" TextAlignment="Center" Margin="0,0,0,12" MinHeight="32" />
+
+                  <!-- Parlaklık -->
+                  <Border Style="{StaticResource Pill}" CornerRadius="16" Padding="14,10" Margin="0,0,0,10">
+                    <StackPanel>
+                      <DockPanel>
+                        <TextBlock x:Name="BrightnessLabel" Text="%70" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentSoft}" DockPanel.Dock="Right" />
+                        <TextBlock Text="{l:T brightness}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      </DockPanel>
+                      <Grid x:Name="BrightnessPanel" IsEnabled="False" Margin="0,6,0,0">
+                        <Slider x:Name="BrightnessSlider" Minimum="1" Maximum="100" Value="70" IsSnapToTickEnabled="True" TickFrequency="1" AutomationProperties.Name="{l:T brightness}" ValueChanged="Brightness_Changed" PreviewMouseLeftButtonUp="BrightnessSlider_Release" KeyUp="BrightnessSlider_KeyUp" />
+                      </Grid>
+                      <TextBlock x:Name="BrightnessHint" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" />
+                    </StackPanel>
+                  </Border>
+
+                  <!-- Beyaz tonu -->
+                  <Border Style="{StaticResource Pill}" CornerRadius="16" Padding="14,10">
+                    <StackPanel>
+                      <DockPanel>
+                        <TextBlock x:Name="TemperatureLabel" Text="2700 K" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentSoft}" DockPanel.Dock="Right" />
+                        <TextBlock Text="{l:T white_tone}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      </DockPanel>
+                      <Grid x:Name="TemperaturePanel" IsEnabled="False" Margin="0,6,0,0">
+                        <Slider x:Name="TemperatureSlider" Minimum="2200" Maximum="6500" Value="2700" IsSnapToTickEnabled="True" TickFrequency="100" AutomationProperties.Name="{l:T white_temp}" ValueChanged="Temperature_Changed" PreviewMouseLeftButtonUp="TemperatureSlider_Release" KeyUp="TemperatureSlider_KeyUp">
+                          <Slider.Foreground>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                              <GradientStop Color="#FFB46B" Offset="0" />
+                              <GradientStop Color="#FFE7C7" Offset="0.5" />
+                              <GradientStop Color="#DCE9FF" Offset="1" />
+                            </LinearGradientBrush>
+                          </Slider.Foreground>
+                        </Slider>
+                      </Grid>
+                      <DockPanel Margin="0,2,0,0">
+                        <TextBlock Text="{l:T warm}" FontSize="10" Foreground="{DynamicResource Muted}" />
+                        <TextBlock Text="{l:T cool}" FontSize="10" Foreground="{DynamicResource Muted}" HorizontalAlignment="Right" />
+                      </DockPanel>
+                      <TextBlock x:Name="TemperatureHint" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" />
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <!-- Renkler -->
+            <ContentControl Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="ColorsChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="colors" Click="Section_Click" />
+                  <Button Style="{StaticResource HeaderButton}" Tag="colors" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock Text="{l:T colors}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
+                </DockPanel>
+
+                <StackPanel x:Name="ColorsBody" Margin="0,10,0,0">
+                  <StackPanel x:Name="ColorPanel" />
+
+                  <!-- Özel renk -->
+                  <Border Style="{StaticResource Pill}" CornerRadius="18" Padding="14" Margin="0,6,0,0">
+                    <DockPanel>
+                      <Grid DockPanel.Dock="Left" Width="176" Height="176" Margin="0,0,18,0">
+                        <Image x:Name="Wheel" Width="176" Height="176" Cursor="Cross" MouseLeftButtonDown="Wheel_MouseDown" MouseMove="Wheel_MouseMove" MouseLeftButtonUp="Wheel_MouseUp" />
+                        <Canvas IsHitTestVisible="False">
+                          <Ellipse x:Name="WheelMarker" Width="18" Height="18" Stroke="White" StrokeThickness="3">
+                            <Ellipse.Effect>
+                              <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.7" />
+                            </Ellipse.Effect>
+                          </Ellipse>
+                        </Canvas>
+                      </Grid>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{l:T custom_upper}" Style="{StaticResource SectionLabel}" />
+                        <DockPanel Margin="0,8,0,0">
+                          <Border x:Name="CustomPreview" Width="46" Height="46" CornerRadius="23" DockPanel.Dock="Left" BorderBrush="#59FFFFFF" BorderThickness="1" Margin="0,0,12,0" />
+                          <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Hex" FontSize="11" Foreground="{DynamicResource Muted}" />
+                            <TextBox x:Name="HexBox" Text="#FF8C1A" Margin="0,3,0,0" MaxLength="7" KeyDown="HexBox_KeyDown" LostFocus="HexBox_LostFocus" />
+                          </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="0,10,0,0">
+                          <TextBlock Text="{l:T saturation}" Style="{StaticResource OptionLabel}" Width="78" />
+                          <TextBlock x:Name="SatLabel" Style="{StaticResource OptionValue}" DockPanel.Dock="Right" Width="44" TextAlignment="Right" />
+                          <Slider x:Name="SatSlider" Minimum="0" Maximum="100" Value="100" ValueChanged="SatSlider_Changed" PreviewMouseLeftButtonUp="SatSlider_Release" KeyUp="SatSlider_KeyUp" />
+                        </DockPanel>
+                        <WrapPanel Margin="0,10,0,0">
+                          <Button Content="{l:T fav_button}" ToolTip="{l:T fav_add_tip}" Click="AddFavorite_Click" Margin="0" />
+                        </WrapPanel>
+                        <TextBlock x:Name="ColorHint" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="0,8,0,0" />
+                      </StackPanel>
+                    </DockPanel>
+                  </Border>
+
+                  <TextBlock Text="{l:T recent_upper}" Style="{StaticResource SectionLabel}" Margin="0,14,0,8" />
+                  <WrapPanel x:Name="RecentPanel" />
+                  <TextBlock x:Name="RecentEmpty" Text="{l:T none_yet}" FontSize="11" Foreground="{DynamicResource Muted}" />
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <!-- Genel -->
+            <ContentControl Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="GeneralChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="general" Click="Section_Click" />
+                  <Button Style="{StaticResource HeaderButton}" Tag="general" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock Text="{l:T general}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
+                </DockPanel>
+                <StackPanel x:Name="GeneralBody" Margin="0,6,0,0">
+                <CheckBox x:Name="AutoStartBox" Content="{l:T autostart}" ToolTip="{l:T autostart_tip}" Click="AutoStart_Click" />
+                <CheckBox x:Name="AnimBox" Content="{l:T animations}" Click="Anim_Click" />
+                <CheckBox x:Name="WheelBox" Content="{l:T tray_wheel}" ToolTip="{l:T tray_wheel_tip}" Click="WheelBox_Click" />
+                <TextBlock x:Name="WheelHint" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="30,0,0,0" />
+                <DockPanel Margin="0,10,0,2">
+                  <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" MinWidth="180" AutomationProperties.Name="{l:T language_label}" SelectionChanged="Language_Changed" />
+                  <TextBlock Text="{l:T language_label}" VerticalAlignment="Center" Margin="0,0,12,0" TextWrapping="NoWrap" />
+                </DockPanel>
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <WrapPanel Margin="0,0,0,14">
+              <Button Content="{l:T help}" Style="{StaticResource Small}" Margin="0,0,8,8" Click="Help_Click" />
+              <Button Content="Bluetooth" Style="{StaticResource Small}" Margin="0,0,8,8" Click="Settings_Click" />
+              <Button x:Name="ForgetButton" Content="{l:T forget}" Style="{StaticResource Small}" Margin="0,0,8,8" Click="Forget_Click" />
+              <Button Content="{l:T diag_report}" ToolTip="{l:T diag_report_tip}" Style="{StaticResource Small}" Margin="0,0,8,8" Click="Report_Click" />
+            </WrapPanel>
+          </StackPanel>
+
+          <!-- SAĞ SÜTUN -->
+          <StackPanel Grid.Column="2">
+            <!-- Sahneler -->
+            <ContentControl x:Name="SceneCard" Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="ScenesChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="scenes" Click="Section_Click" />
+                  <StackPanel x:Name="ScenesActions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{l:T scene_save}" Style="{StaticResource Small}" VerticalAlignment="Center" Margin="0" Click="SceneSave_Click" ToolTip="{l:T scene_save_tip}" />
+                    <Button x:Name="SceneMoreButton" Content="•••" Style="{StaticResource Small}" VerticalAlignment="Center" Margin="6,0,0,0" Padding="10,4" Click="SceneMore_Click" ToolTip="{l:T more}" />
+                  </StackPanel>
+                  <Button Style="{StaticResource HeaderButton}" Tag="scenes" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel>
+                      <TextBlock Text="{l:T scenes}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" />
+                      <TextBlock Text="{l:T scenes_hint}" FontSize="11" Foreground="{DynamicResource Muted}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel></Button>
+                </DockPanel>
+                <StackPanel x:Name="ScenesBody" Margin="0,12,0,0">
+                  <WrapPanel x:Name="SceneTiles" Margin="0,0,-10,0" />
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <!-- Modlar -->
+            <ContentControl x:Name="ModesCard" Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="ModesChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="modes" Click="Section_Click" />
+                  <Border x:Name="ModesActions" Style="{StaticResource Pill}" DockPanel.Dock="Right" VerticalAlignment="Center" Padding="10,4">
+                    <TextBlock x:Name="ModeBadge" Text="{l:T manual_upper}" Foreground="{DynamicResource ModeText}" FontSize="10" FontWeight="SemiBold" TextWrapping="NoWrap" />
+                  </Border>
+                  <Button Style="{StaticResource HeaderButton}" Tag="modes" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock Text="{l:T modes}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
+                </DockPanel>
+                <StackPanel x:Name="ModesBody" Margin="0,10,0,0">
+                  <UniformGrid Columns="4" Margin="0,4,-8,0">
+                    <RadioButton x:Name="TabManual" Style="{StaticResource ModeTile}" Tag="Manuel" Click="ModeTile_Click">
+                      <StackPanel>
+                        <Path Data="M3,7 H21 M3,17 H21 M8,4 V10 M16,14 V20" Stroke="{DynamicResource Text}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="24" Height="24" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TabManualText" Text="{l:T mode_manual}" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TabScreen" Style="{StaticResource ModeTile}" Tag="Ekran" Click="ModeTile_Click">
+                      <StackPanel>
+                        <Path Data="M3,4 H21 V16 H3 Z M9,20 H15 M12,16 V20" Stroke="#64D2FF" StrokeThickness="2" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="24" Height="24" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TabScreenText" Text="{l:T mode_screen}" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TabAudio" Style="{StaticResource ModeTile}" Tag="Ses" Click="ModeTile_Click">
+                      <StackPanel>
+                        <Path Data="M4,10 V14 M8,7 V17 M12,4 V20 M16,8 V16 M20,11 V13" Stroke="#30D158" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="24" Height="24" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TabAudioText" Text="{l:T mode_audio}" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TabSpotify" Style="{StaticResource ModeTile}" Tag="Spotify" Click="ModeTile_Click" ToolTip="{l:T spotify_tip}">
+                      <StackPanel>
+                        <Path Data="M12,2 A10,10 0 1 1 11.99,2 Z M6.5,9.2 C10,8 14.5,8.3 17.8,10.2 M7.2,12.4 C10.2,11.5 13.8,11.8 16.6,13.3 M7.8,15.4 C10.3,14.8 13,15 15.2,16.1" Stroke="#1ED760" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="24" Height="24" Stretch="Uniform" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TabSpotifyText" Text="Spotify" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TabRainbow" Style="{StaticResource ModeTile}" Tag="Gökkuşağı" Click="ModeTile_Click">
+                      <StackPanel>
+                        <Path Data="M2,18 A10,10 0 0 1 22,18 M6,18 A6,6 0 0 1 18,18 M10,18 A2,2 0 0 1 14,18" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="24" Height="24" HorizontalAlignment="Center">
+                          <Path.Stroke>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                              <GradientStop Color="#FF453A" Offset="0" />
+                              <GradientStop Color="#FFD60A" Offset="0.3" />
+                              <GradientStop Color="#30D158" Offset="0.55" />
+                              <GradientStop Color="#0A84FF" Offset="0.8" />
+                              <GradientStop Color="#BF5AF2" Offset="1" />
+                            </LinearGradientBrush>
+                          </Path.Stroke>
+                        </Path>
+                        <TextBlock x:Name="TabRainbowText" Text="{l:T mode_rainbow}" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TabFire" Style="{StaticResource ModeTile}" Tag="Şömine" Click="ModeTile_Click">
+                      <StackPanel>
+                        <Path Data="M12,2 C14,7 19,9 19,15 A7,7 0 0 1 5,15 C5,11 8,9 9,6 C10,9 11,10 12,11 C13,8 12,5 12,2 Z" StrokeThickness="2" StrokeLineJoin="Round" Width="24" Height="24" HorizontalAlignment="Center">
+                          <Path.Stroke>
+                            <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                              <GradientStop Color="#FF3B30" Offset="0" />
+                              <GradientStop Color="#FF9F0A" Offset="0.6" />
+                              <GradientStop Color="#FFD60A" Offset="1" />
+                            </LinearGradientBrush>
+                          </Path.Stroke>
+                        </Path>
+                        <TextBlock x:Name="TabFireText" Text="{l:T mode_fire}" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TabDaylight" Style="{StaticResource ModeTile}" Tag="Gün ışığı" Click="ModeTile_Click" ToolTip="{l:T daylight_tip}">
+                      <StackPanel>
+                        <Path Data="M2,18 H22 M6,18 A6,6 0 0 1 18,18 M12,6 V8 M4.5,10.5 L6,12 M19.5,10.5 L18,12" Stroke="#FFD27A" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="24" Height="24" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TabDaylightText" Text="{l:T mode_daylight}" FontSize="12.5" HorizontalAlignment="Center" Margin="0,6,0,0" TextWrapping="NoWrap" />
+                      </StackPanel>
+                    </RadioButton>
+                  </UniformGrid>
+
+                  <!-- Mod seçenekleri -->
+                  <Border x:Name="ModeOptionsHost" Style="{StaticResource Pill}" CornerRadius="18" Padding="16,14" Margin="0,12,0,0">
+                    <StackPanel>
+                      <!-- Manuel -->
+                      <StackPanel x:Name="OptManual">
+                        <TextBlock Text="{l:T mode_manual}" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Text="{l:T manual_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,4,0,0" />
+                      </StackPanel>
+
+                      <!-- Ekran -->
+                      <StackPanel x:Name="OptScreen" Visibility="Collapsed">
+                        <DockPanel>
+                          <Button Content="{l:T restore_defaults}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Padding="10,3" FontSize="11.5" Tag="Ekran" Click="ModeDefaults_Click" ToolTip="{l:T restore_defaults_tip}" />
+                          <TextBlock Text="{l:T mode_screen}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock Text="{l:T screen_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="118" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <TextBlock Grid.Row="0" Text="{l:T update_word}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="0" Grid.Column="1" x:Name="ScreenInterval" Minimum="50" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" Value="{Binding Screen.IntervalMs, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="0" Grid.Column="2" x:Name="ScreenIntervalText" Style="{StaticResource OptionValue}" />
+
+                          <TextBlock Grid.Row="1" Text="{l:T area}" Style="{StaticResource OptionLabel}" />
+                          <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="ScreenArea" Margin="0,4" SelectedIndex="{Binding Screen.Area, Mode=TwoWay}" />
+
+                          <TextBlock Grid.Row="2" Text="{l:T monitor}" Style="{StaticResource OptionLabel}" />
+                          <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" x:Name="ScreenMonitor" Margin="0,4" DropDownOpened="ScreenMonitor_DropDownOpened" />
+
+                          <TextBlock Grid.Row="3" Text="{l:T smoothing}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="95" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Screen.Smoothing, Mode=TwoWay}" x:Name="ScreenSmoothing" />
+                          <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=ScreenSmoothing, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="4" Text="{l:T method}" Style="{StaticResource OptionLabel}" />
+                          <ComboBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="ScreenMethod" Margin="0,4" SelectedIndex="{Binding Screen.Method, Mode=TwoWay}" />
+
+                          <TextBlock Grid.Row="5" Text="{l:T vividness}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Screen.SaturationBoost, Mode=TwoWay}" x:Name="ScreenBoost" />
+                          <TextBlock Grid.Row="5" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=ScreenBoost, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                        </Grid>
+                        <CheckBox Content="{l:T ignore_dark}" IsChecked="{Binding Screen.IgnoreDark, Mode=TwoWay}" Margin="0,8,0,2" />
+                        <CheckBox Content="{l:T follow_brightness}" IsChecked="{Binding Screen.FollowBrightness, Mode=TwoWay}" />
+                      </StackPanel>
+
+                      <!-- Ses -->
+                      <StackPanel x:Name="OptAudio" Visibility="Collapsed">
+                        <DockPanel>
+                          <Button Content="{l:T restore_defaults}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Padding="10,3" FontSize="11.5" Tag="Ses" Click="ModeDefaults_Click" ToolTip="{l:T restore_defaults_tip}" />
+                          <TextBlock Text="{l:T mode_audio}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock Text="{l:T audio_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="86" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <TextBlock Grid.Row="0" Text="{l:T sensitivity}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="0" Grid.Column="1" x:Name="Sensitivity" Minimum="1" Maximum="12" Value="{Binding Audio.Sensitivity, Mode=TwoWay}" AutomationProperties.Name="{l:T audio_sensitivity}" />
+                          <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=Sensitivity, StringFormat={}{0:F1}×}" />
+
+                          <TextBlock Grid.Row="1" Text="{l:T response}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="1" Grid.Column="1" x:Name="AudioAttack" Minimum="10" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Audio.Attack, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=AudioAttack, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="2" Text="{l:T decay}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="2" Grid.Column="1" x:Name="AudioRelease" Minimum="5" Maximum="90" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Audio.Release, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=AudioRelease, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="3" Text="{l:T min}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="3" Grid.Column="1" x:Name="AudioMin" Minimum="1" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Audio.MinBrightness, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=AudioMin, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="4" Text="{l:T max}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="4" Grid.Column="1" x:Name="AudioMax" Minimum="20" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Audio.MaxBrightness, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=AudioMax, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="5" Text="{l:T update_word}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="5" Grid.Column="1" x:Name="AudioInterval" Minimum="100" Maximum="600" TickFrequency="10" IsSnapToTickEnabled="True" Value="{Binding Audio.IntervalMs, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="5" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=AudioInterval, StringFormat={}{0:F0} ms}" />
+                        </Grid>
+                      </StackPanel>
+
+                      <!-- Gökkuşağı -->
+                      <StackPanel x:Name="OptRainbow" Visibility="Collapsed">
+                        <DockPanel>
+                          <Button Content="{l:T restore_defaults}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Padding="10,3" FontSize="11.5" Tag="Gökkuşağı" Click="ModeDefaults_Click" ToolTip="{l:T restore_defaults_tip}" />
+                          <TextBlock Text="{l:T mode_rainbow}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock Text="{l:T rainbow_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                        <DockPanel>
+                          <Grid DockPanel.Dock="Left" Width="22" Margin="0,4,16,4">
+                            <Border x:Name="RainbowBar" CornerRadius="11" BorderBrush="{DynamicResource Stroke}" BorderThickness="1" />
+                            <Canvas x:Name="RainbowMarkerCanvas">
+                              <Ellipse x:Name="RainbowMarker" Width="18" Height="18" Canvas.Left="2" Stroke="White" StrokeThickness="2.5">
+                                <Ellipse.Effect>
+                                  <DropShadowEffect BlurRadius="6" ShadowDepth="0" Opacity="0.6" />
+                                </Ellipse.Effect>
+                              </Ellipse>
+                            </Canvas>
+                          </Grid>
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="130" />
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="76" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                              <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="{l:T direction}" Style="{StaticResource OptionLabel}" />
+                            <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" x:Name="RainbowDirectionBox" Margin="0,4" SelectedIndex="{Binding Rainbow.Direction, Mode=TwoWay}" />
+
+                            <TextBlock Grid.Row="1" Text="{l:T palette}" Style="{StaticResource OptionLabel}" />
+                            <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="RainbowPaletteBox" Margin="0,4" SelectedIndex="{Binding Rainbow.Palette, Mode=TwoWay}" SelectionChanged="RainbowPalette_Changed" />
+
+                            <TextBlock Grid.Row="2" Text="{l:T cycle_time}" Style="{StaticResource OptionLabel}" />
+                            <Slider Grid.Row="2" Grid.Column="1" x:Name="RainbowCycle" Minimum="4" Maximum="120" TickFrequency="1" IsSnapToTickEnabled="True" IsDirectionReversed="True" Value="{Binding Rainbow.CycleSeconds, Mode=TwoWay}" ToolTip="{l:T cycle_time_tip}" />
+                            <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=RainbowCycle, Converter={x:Static l:FmtConverter.I}, ConverterParameter=fmt_sec}" />
+
+                            <TextBlock Grid.Row="3" Text="{l:T saturation}" Style="{StaticResource OptionLabel}" />
+                            <Slider Grid.Row="3" Grid.Column="1" x:Name="RainbowSat" Minimum="30" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Rainbow.Saturation, Mode=TwoWay}" ValueChanged="RainbowPalette_Changed" />
+                            <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=RainbowSat, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                            <TextBlock Grid.Row="4" Text="{l:T update_word}" Style="{StaticResource OptionLabel}" />
+                            <Slider Grid.Row="4" Grid.Column="1" x:Name="RainbowInterval" Minimum="100" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" Value="{Binding Rainbow.IntervalMs, Mode=TwoWay}" />
+                            <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=RainbowInterval, StringFormat={}{0:F0} ms}" />
+
+                            <CheckBox Grid.Row="5" Grid.ColumnSpan="3" x:Name="RainbowUseBri" Content="{l:T fixed_brightness}" IsChecked="{Binding Rainbow.UseBrightness, Mode=TwoWay}" />
+                            <TextBlock Grid.Row="6" Text="{l:T brightness}" Style="{StaticResource OptionLabel}" />
+                            <Slider Grid.Row="6" Grid.Column="1" x:Name="RainbowBri" Minimum="5" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Rainbow.Brightness, Mode=TwoWay}" IsEnabled="{Binding IsChecked, ElementName=RainbowUseBri}" />
+                            <TextBlock Grid.Row="6" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=RainbowBri, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                          </Grid>
+                        </DockPanel>
+                      </StackPanel>
+
+                      <!-- Şömine -->
+                      <StackPanel x:Name="OptFire" Visibility="Collapsed">
+                        <DockPanel>
+                          <Button Content="{l:T restore_defaults}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Padding="10,3" FontSize="11.5" Tag="Şömine" Click="ModeDefaults_Click" ToolTip="{l:T restore_defaults_tip}" />
+                          <TextBlock Text="{l:T mode_fire}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock Text="{l:T fire_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                        <Border x:Name="FirePreview" Height="16" CornerRadius="8" Margin="0,0,0,10" BorderBrush="{DynamicResource Stroke}" BorderThickness="1" />
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="86" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <TextBlock Grid.Row="0" Text="{l:T intensity}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="0" Grid.Column="1" x:Name="FireIntensity" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Fire.Intensity, Mode=TwoWay}" ToolTip="{l:T intensity_tip}" />
+                          <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=FireIntensity, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="1" Text="{l:T speed}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="1" Grid.Column="1" x:Name="FireSpeed" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Fire.Speed, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=FireSpeed, StringFormat={}{0:F0} / 10}" />
+
+                          <TextBlock Grid.Row="2" Text="{l:T temperature}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="2" Grid.Column="1" x:Name="FireWarmth" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Fire.Warmth, Mode=TwoWay}" ToolTip="{l:T temperature_tip}" ValueChanged="FireWarmth_Changed">
+                            <Slider.Foreground>
+                              <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#C1121F" Offset="0" />
+                                <GradientStop Color="#FF7B00" Offset="0.5" />
+                                <GradientStop Color="#FFD000" Offset="1" />
+                              </LinearGradientBrush>
+                            </Slider.Foreground>
+                          </Slider>
+                          <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=FireWarmth, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="3" Text="{l:T brightness}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="3" Grid.Column="1" x:Name="FireBrightness" Minimum="10" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Fire.Brightness, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=FireBrightness, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                        </Grid>
+                        <CheckBox Content="{l:T sparks}" IsChecked="{Binding Fire.Sparks, Mode=TwoWay}" Margin="0,8,0,0" />
+                        <TextBlock x:Name="FireNote" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" />
+                      </StackPanel>
+
+                      <!-- Spotify -->
+                      <StackPanel x:Name="OptSpotify" Visibility="Collapsed">
+                        <DockPanel>
+                          <Button Content="{l:T restore_defaults}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Padding="10,3" FontSize="11.5" Tag="Spotify" Click="ModeDefaults_Click" ToolTip="{l:T restore_defaults_tip}" />
+                          <TextBlock Text="Spotify" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock x:Name="SpotifySubtitle" Text="{l:T spotify_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                        <Border Style="{StaticResource Pill}" CornerRadius="14" Padding="10,8" Margin="0,0,0,10">
+                          <DockPanel>
+                            <Border x:Name="NowPlayingChip" Width="34" Height="34" CornerRadius="8" Background="#33FFFFFF" Margin="0,0,10,0" DockPanel.Dock="Left" />
+                            <StackPanel VerticalAlignment="Center">
+                              <TextBlock x:Name="NowPlayingTitle" Text="{l:T nothing_playing}" FontWeight="SemiBold" FontSize="13" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                              <TextBlock x:Name="NowPlayingArtist" Text="{l:T start_spotify}" FontSize="11" Foreground="{DynamicResource Muted}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                          </DockPanel>
+                        </Border>
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="86" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <TextBlock Grid.Row="0" Text="{l:T brightness}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="0" Grid.Column="1" x:Name="SpotifyBri" Minimum="5" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Spotify.Brightness, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=SpotifyBri, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+
+                          <TextBlock Grid.Row="1" Text="{l:T transition}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="1" Grid.Column="1" x:Name="SpotifyFade" Minimum="200" Maximum="5000" TickFrequency="100" IsSnapToTickEnabled="True" Value="{Binding Spotify.TransitionMs, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=SpotifyFade, StringFormat={}{0:F0} ms}" />
+
+                          <TextBlock Grid.Row="2" Text="{l:T vividness}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="2" Grid.Column="1" x:Name="SpotifySat" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Spotify.Saturation, Mode=TwoWay}" />
+                          <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=SpotifySat, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                        </Grid>
+                        <CheckBox x:Name="SpotifyOnly" Content="{l:T spotify_only}" ToolTip="{l:T spotify_only_tip}" IsChecked="{Binding Spotify.OnlySpotify, Mode=TwoWay}" Margin="0,8,0,0" Click="SpotifyOnly_Click" />
+                      </StackPanel>
+
+                      <!-- Gün ışığı -->
+                      <StackPanel x:Name="OptDaylight" Visibility="Collapsed">
+                        <DockPanel>
+                          <Button Content="{l:T restore_defaults}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="8,0,0,0" Padding="10,3" FontSize="11.5" Tag="Gün ışığı" Click="ModeDefaults_Click" ToolTip="{l:T restore_defaults_tip}" />
+                          <TextBlock Text="{l:T mode_daylight}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <TextBlock Text="{l:T daylight_desc}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="0,2,0,8" />
+                        <Grid Height="34" Margin="0,0,0,10">
+                          <Border x:Name="DaylightBar" CornerRadius="9" Height="18" VerticalAlignment="Top" BorderBrush="{DynamicResource Stroke}" BorderThickness="1" />
+                          <Canvas x:Name="DaylightCanvas">
+                            <Border x:Name="DaylightNow" Width="3" Height="24" CornerRadius="1.5" Background="{DynamicResource Text}" Canvas.Top="-3" />
+                          </Canvas>
+                          <DockPanel VerticalAlignment="Bottom">
+                            <TextBlock Text="00" FontSize="9.5" Foreground="{DynamicResource Muted}" />
+                            <TextBlock Text="24" FontSize="9.5" Foreground="{DynamicResource Muted}" DockPanel.Dock="Right" />
+                            <TextBlock Text="12" FontSize="9.5" Foreground="{DynamicResource Muted}" HorizontalAlignment="Center" />
+                          </DockPanel>
+                        </Grid>
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="86" />
+                          </Grid.ColumnDefinitions>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <TextBlock Grid.Row="0" Text="{l:T wake_time}" Style="{StaticResource OptionLabel}" />
+                          <TextBox Grid.Row="0" Grid.Column="1" x:Name="DayWake" Width="90" HorizontalAlignment="Left" Margin="0,4" MaxLength="5" LostFocus="DaylightTime_Commit" KeyDown="TimeBox_KeyDown" />
+                          <TextBlock Grid.Row="1" Text="{l:T bed_time}" Style="{StaticResource OptionLabel}" />
+                          <TextBox Grid.Row="1" Grid.Column="1" x:Name="DaySleep" Width="90" HorizontalAlignment="Left" Margin="0,4" MaxLength="5" LostFocus="DaylightTime_Commit" KeyDown="TimeBox_KeyDown" />
+
+                          <TextBlock Grid.Row="2" Text="{l:T warmest}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="2" Grid.Column="1" x:Name="DayMinK" Minimum="2200" Maximum="4000" TickFrequency="100" IsSnapToTickEnabled="True" Value="{Binding Daylight.MinKelvin, Mode=TwoWay}" ValueChanged="Daylight_Changed" />
+                          <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=DayMinK, StringFormat={}{0:F0} K}" />
+                          <TextBlock Grid.Row="3" Text="{l:T coolest}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="3" Grid.Column="1" x:Name="DayMaxK" Minimum="3500" Maximum="6500" TickFrequency="100" IsSnapToTickEnabled="True" Value="{Binding Daylight.MaxKelvin, Mode=TwoWay}" ValueChanged="Daylight_Changed" />
+                          <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=DayMaxK, StringFormat={}{0:F0} K}" />
+
+                          <TextBlock Grid.Row="4" Text="{l:T min}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="4" Grid.Column="1" x:Name="DayMinB" Minimum="1" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Daylight.MinBrightness, Mode=TwoWay}" ValueChanged="Daylight_Changed" />
+                          <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=DayMinB, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                          <TextBlock Grid.Row="5" Text="{l:T max}" Style="{StaticResource OptionLabel}" />
+                          <Slider Grid.Row="5" Grid.Column="1" x:Name="DayMaxB" Minimum="30" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Daylight.MaxBrightness, Mode=TwoWay}" ValueChanged="Daylight_Changed" />
+                          <TextBlock Grid.Row="5" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=DayMaxB, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                        </Grid>
+                      </StackPanel>
+
+                      <DockPanel Margin="0,12,0,0">
+                        <Button x:Name="ModeStartButton" Content="{l:T start}" Style="{StaticResource Primary}" DockPanel.Dock="Right" Margin="10,0,0,0" MinWidth="110" Click="ModeStart_Click" />
+                        <TextBlock x:Name="LiveText" Text="" FontSize="12" Foreground="{DynamicResource ModeText}" VerticalAlignment="Center" />
+                      </DockPanel>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <!-- Zamanlayıcı -->
+            <ContentControl x:Name="TimerCard" Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="TimerChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="timer" Click="Section_Click" />
+                  <Border Style="{StaticResource Pill}" DockPanel.Dock="Right" VerticalAlignment="Center" Padding="10,4">
+                    <TextBlock x:Name="TimerBadge" Text="{l:T off_upper}" Foreground="{DynamicResource ModeText}" FontSize="10" FontWeight="SemiBold" TextWrapping="NoWrap" />
+                  </Border>
+                  <Button Style="{StaticResource HeaderButton}" Tag="timer" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><TextBlock Text="{l:T timer}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" /></Button>
+                </DockPanel>
+                <StackPanel x:Name="TimerBody">
+
+                <!-- Uyku sayacı -->
+                <Border Style="{StaticResource Pill}" CornerRadius="16" Padding="14,10" Margin="0,12,0,10">
+                  <StackPanel>
+                    <DockPanel>
+                      <Button x:Name="SleepChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="sleep" Click="Section_Click" />
+                      <TextBlock x:Name="SleepRemaining" Text="" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentSoft}" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                      <Button Style="{StaticResource HeaderButton}" Tag="sleep" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel>
+                        <TextBlock Text="{l:T sleep_timer}" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Text="{l:T sleep_desc}" FontSize="11" Foreground="{DynamicResource Muted}" />
+                      </StackPanel></Button>
+                    </DockPanel>
+                    <WrapPanel x:Name="SleepBody" Margin="0,10,0,0">
+                      <Button Content="{l:T min_15}" Tag="15" Style="{StaticResource Small}" Margin="0,0,6,6" Click="SleepPreset_Click" />
+                      <Button Content="{l:T min_30}" Tag="30" Style="{StaticResource Small}" Margin="0,0,6,6" Click="SleepPreset_Click" />
+                      <Button Content="{l:T min_45}" Tag="45" Style="{StaticResource Small}" Margin="0,0,6,6" Click="SleepPreset_Click" />
+                      <Button Content="{l:T min_60}" Tag="60" Style="{StaticResource Small}" Margin="0,0,6,6" Click="SleepPreset_Click" />
+                      <TextBox x:Name="SleepCustom" Width="60" Text="90" MaxLength="3" Margin="0,0,6,6" Padding="8,4" ToolTip="{l:T minutes}" KeyDown="SleepCustom_KeyDown" />
+                      <Button Content="{l:T start}" Style="{StaticResource Small}" Margin="0,0,6,6" Click="SleepCustom_Click" />
+                      <Button x:Name="SleepCancelButton" Content="{l:T cancel}" Style="{StaticResource Small}" Margin="0,0,0,6" Click="SleepCancel_Click" Visibility="Collapsed" />
+                    </WrapPanel>
+                  </StackPanel>
+                </Border>
+
+                <!-- Uyandırma -->
+                <Border Style="{StaticResource Pill}" CornerRadius="16" Padding="14,10" Margin="0,0,0,10">
+                  <StackPanel>
+                    <DockPanel>
+                      <Button x:Name="WakeChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="wake" Click="Section_Click" />
+                      <ToggleButton x:Name="WakeToggle" Style="{StaticResource Switch}" DockPanel.Dock="Right" VerticalAlignment="Center" Click="Wake_Changed" />
+                      <Button Style="{StaticResource HeaderButton}" Tag="wake" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel>
+                        <TextBlock Text="{l:T wake}" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Text="{l:T wake_desc}" FontSize="11" Foreground="{DynamicResource Muted}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel></Button>
+                    </DockPanel>
+                    <StackPanel x:Name="WakeBody">
+                    <Grid Margin="0,10,0,0">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="96" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="64" />
+                      </Grid.ColumnDefinitions>
+                      <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                      </Grid.RowDefinitions>
+                      <TextBlock Text="{l:T time}" Style="{StaticResource OptionLabel}" />
+                      <TextBox Grid.Column="1" x:Name="WakeTime" Width="86" HorizontalAlignment="Left" MaxLength="5" Margin="0,4" LostFocus="Wake_Changed" KeyDown="TimeBox_KeyDown" />
+                      <TextBlock Grid.Row="1" Text="{l:T days}" Style="{StaticResource OptionLabel}" />
+                      <WrapPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="WakeDays" Margin="0,6,0,0" />
+                      <TextBlock Grid.Row="2" Text="{l:T duration}" Style="{StaticResource OptionLabel}" />
+                      <Slider Grid.Row="2" Grid.Column="1" x:Name="WakeFade" Minimum="5" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True" Value="20" ValueChanged="WakeSlider_Changed" />
+                      <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=WakeFade, Converter={x:Static l:FmtConverter.I}, ConverterParameter=fmt_min}" />
+                      <TextBlock Grid.Row="3" Text="{l:T brightness}" Style="{StaticResource OptionLabel}" />
+                      <Slider Grid.Row="3" Grid.Column="1" x:Name="WakeBri" Minimum="20" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" Value="100" ValueChanged="WakeSlider_Changed" />
+                      <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=WakeBri, Converter={x:Static l:FmtConverter.I}, ConverterParameter=pct}" />
+                    </Grid>
+                    <TextBlock x:Name="WakeNext" Text="" FontSize="11" Foreground="{DynamicResource ModeText}" Margin="0,4,0,0" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
+                <!-- Programlar -->
+                <Border Style="{StaticResource Pill}" CornerRadius="16" Padding="14,10">
+                  <StackPanel>
+                    <DockPanel>
+                      <Button x:Name="ProgramsChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="programs" Click="Section_Click" />
+                      <Button Content="{l:T add}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="0" VerticalAlignment="Center" Click="ScheduleAdd_Click" />
+                      <Button Style="{StaticResource HeaderButton}" Tag="programs" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel>
+                        <TextBlock Text="{l:T programs}" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Text="{l:T programs_desc}" FontSize="11" Foreground="{DynamicResource Muted}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel></Button>
+                    </DockPanel>
+                    <StackPanel x:Name="ProgramsBody">
+                    <StackPanel x:Name="ScheduleList" Margin="0,8,0,0" />
+                    <TextBlock x:Name="ScheduleEmpty" Text="{l:T no_programs}" FontSize="11" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+            <!-- Bildirim ışığı -->
+            <ContentControl x:Name="NotifyCard" Style="{StaticResource GlassCard}" Margin="0,0,0,14">
+              <StackPanel>
+                <DockPanel>
+                  <Button x:Name="NotifyChev" Style="{StaticResource Chevron}" DockPanel.Dock="Right" Tag="notify" Click="Section_Click" />
+                  <ToggleButton x:Name="NotifyToggle" Style="{StaticResource Switch}" DockPanel.Dock="Right" VerticalAlignment="Center" Click="NotifyToggle_Click" />
+                  <Button Style="{StaticResource HeaderButton}" Tag="notify" Click="Section_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"><StackPanel>
+                    <TextBlock Text="{l:T notify_light}" FontSize="22" FontWeight="SemiBold" TextWrapping="NoWrap" />
+                    <TextBlock x:Name="NotifyStatus" Text="{l:T off}" FontSize="11" Foreground="{DynamicResource Muted}" TextTrimming="CharacterEllipsis" />
+                  </StackPanel></Button>
+                </DockPanel>
+                <StackPanel x:Name="NotifyBody">
+                <WrapPanel Margin="0,10,0,0">
+                  <CheckBox Margin="0,4,14,4" IsChecked="{Binding Notify.Discord, Mode=TwoWay}"><StackPanel Orientation="Horizontal"><Ellipse Width="9" Height="9" Fill="#5865F2" Margin="0,0,6,0" VerticalAlignment="Center" /><TextBlock Text="Discord" /></StackPanel></CheckBox>
+                  <CheckBox Margin="0,4,14,4" IsChecked="{Binding Notify.WhatsApp, Mode=TwoWay}"><StackPanel Orientation="Horizontal"><Ellipse Width="9" Height="9" Fill="#25D366" Margin="0,0,6,0" VerticalAlignment="Center" /><TextBlock Text="WhatsApp" /></StackPanel></CheckBox>
+                  <CheckBox Margin="0,4,14,4" IsChecked="{Binding Notify.Teams, Mode=TwoWay}"><StackPanel Orientation="Horizontal"><Ellipse Width="9" Height="9" Fill="#7B83EB" Margin="0,0,6,0" VerticalAlignment="Center" /><TextBlock Text="Teams" /></StackPanel></CheckBox>
+                  <CheckBox Margin="0,4,14,4" IsChecked="{Binding Notify.Outlook, Mode=TwoWay}"><StackPanel Orientation="Horizontal"><Ellipse Width="9" Height="9" Fill="#0F6CBD" Margin="0,0,6,0" VerticalAlignment="Center" /><TextBlock Text="Outlook" /></StackPanel></CheckBox>
+                  <CheckBox Margin="0,4,14,4" IsChecked="{Binding Notify.Others, Mode=TwoWay}" Content="{l:T others}" />
+                </WrapPanel>
+                <Grid Margin="0,6,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="96" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="64" />
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                  </Grid.RowDefinitions>
+                  <TextBlock Text="{l:T color}" Style="{StaticResource OptionLabel}" />
+                  <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <CheckBox x:Name="NotifyAppColor" Content="{l:T app_color}" IsChecked="{Binding Notify.UseAppColor, Mode=TwoWay}" Margin="0,4,12,4" Click="NotifyColor_Changed" />
+                    <Border x:Name="NotifyChip" Width="24" Height="24" CornerRadius="12" BorderBrush="#59FFFFFF" BorderThickness="1" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="NotifyHex" Width="84" MaxLength="7" Padding="8,4" VerticalAlignment="Center" LostFocus="NotifyColor_Changed" KeyDown="TimeBox_KeyDown" />
+                  </StackPanel>
+                  <TextBlock Grid.Row="1" Text="{l:T blinks}" Style="{StaticResource OptionLabel}" />
+                  <Slider Grid.Row="1" Grid.Column="1" x:Name="NotifyCount" Minimum="1" Maximum="5" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Notify.Count, Mode=TwoWay}" />
+                  <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource OptionValue}" Text="{Binding Value, ElementName=NotifyCount, Converter={x:Static l:FmtConverter.I}, ConverterParameter=fmt_times}" />
+                </Grid>
+                <DockPanel Margin="0,4,0,0">
+                  <Button Content="{l:T try}" Style="{StaticResource Small}" DockPanel.Dock="Right" Margin="0" Click="NotifyTest_Click" />
+                  <CheckBox Content="{l:T restore_after}" IsChecked="{Binding Notify.Restore, Mode=TwoWay}" />
+                </DockPanel>
+                </StackPanel>
+              </StackPanel>
+            </ContentControl>
+
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+</Window>
