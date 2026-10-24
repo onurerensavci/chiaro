@@ -410,6 +410,7 @@ public partial class App : Application
 		window.ApplyDemoControls();
 		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-dil.png")));
 		string settingsTr = window.SettingsCardCheck();
+		string restoreTr = window.RestoreModeCheck();
 		window.SetStartupForTest(false);
 		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-baslangic-kapali.png")));
 		window.SetStartupForTest(true);
@@ -438,7 +439,9 @@ public partial class App : Application
 		result += "\nLive switch Türkçe -> English (no restart): main window, quick panel, mini mode, tray menu, update dialog, emoji picker, built-in scenes have no Turkish text left: PASS.";
 
 		string settingsEn = window.SettingsCardCheck();
+		string restoreEn = window.RestoreModeCheck();
 		result += settingsTr.Replace(": PASS.", "") + (settingsEn.Contains("title \"Settings\"") ? "; English: title \"Settings\", \"Turn on light at startup\": PASS." : throw new InvalidOperationException("English settings card"));
+		result += restoreTr.Replace(": PASS.", "") + (restoreEn.Contains("\"Restore last mode\"") ? "; English: \"Restore last mode\": PASS." : throw new InvalidOperationException("English restore option"));
 		window.SetUpdateForTest(null);
 		await RenderContent(window, Path.Combine(folder, "1-ana-pencere-en.png"), 1240, 1000,
 			(window.SceneCardElement, Path.Combine(folder, "2-sahneler-karti-en.png")),

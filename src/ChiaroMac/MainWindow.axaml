@@ -246,6 +246,7 @@
                 </Grid>
                 <CheckBox x:Name="AutostartBox" ui:Tr.Key="autostart" ui:Tr.Tip="autostart_tip" Click="Autostart_Click" />
                 <CheckBox x:Name="LightOnStartupBox" ui:Tr.Key="light_on_startup" Margin="26,0,0,0" ToolTip.ShowOnDisabled="True" Click="LightOnStartup_Click" />
+                <CheckBox x:Name="RestoreLastModeBox" ui:Tr.Key="restore_last_mode" Margin="26,0,0,0" ToolTip.ShowOnDisabled="True" Click="RestoreLastMode_Click" />
                 <CheckBox x:Name="AutoUpdateBox" ui:Tr.Key="mac_upd_auto" Click="AutoUpdate_Click" />
                 <WrapPanel>
                   <Button Classes="pill" Margin="0,0,6,6" ui:Tr.Key="help" Click="Help_Click" />

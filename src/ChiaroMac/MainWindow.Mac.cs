@@ -68,6 +68,23 @@ public partial class MainWindow
 		LightOnStartupBox.IsChecked = settings.LightOnStartup;
 		LightOnStartupBox.IsEnabled = startup;
 		ToolTip.SetTip(LightOnStartupBox, L.T(startup ? "light_on_startup_tip" : "light_on_startup_needs"));
+		RestoreLastModeBox.IsChecked = settings.RestoreLastMode;
+		RestoreLastModeBox.IsEnabled = startup;
+		ToolTip.SetTip(RestoreLastModeBox, L.T(startup ? "restore_last_mode_tip" : "light_on_startup_needs"));
+	}
+
+	private void RestoreLastMode_Click(object? sender, RoutedEventArgs e)
+	{
+		if (AutostartBox.IsChecked != true)
+		{
+			DetailText.Text = L.T("light_on_startup_needs");
+			UpdateLightOnStartupBox();
+			return;
+		}
+		settings.RestoreLastMode = RestoreLastModeBox.IsChecked == true;
+		SaveSettings();
+		Log("Son modu geri aç: " + (settings.RestoreLastMode ? "açık" : "kapalı") + (settings.LastMode != null ? " (kayıtlı: " + settings.LastMode.Mode + ")" : ""));
+		UpdateLightOnStartupBox();
 	}
 
 	private void LightOnStartup_Click(object? sender, RoutedEventArgs e)

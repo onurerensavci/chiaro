@@ -50,6 +50,7 @@ public partial class MainWindow
 	private void ClockTick()
 	{
 		if (closed) return;
+		RefreshLastMode();
 		DateTime now = DateTime.Now;
 		if (settings.SleepUntil is DateTime until)
 		{
