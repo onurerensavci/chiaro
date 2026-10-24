@@ -305,7 +305,8 @@
                 </DockPanel>
                 <StackPanel x:Name="SettingsBody" Margin="0,6,0,0">
                 <CheckBox x:Name="AutoStartBox" Content="{l:T autostart}" ToolTip="{l:T autostart_tip}" Click="AutoStart_Click" />
-                <CheckBox x:Name="LightOnStartupBox" Content="{l:T light_on_startup}" Margin="26,2,0,6" ToolTipService.ShowOnDisabled="True" Click="LightOnStartup_Click" />
+                <CheckBox x:Name="LightOnStartupBox" Content="{l:T light_on_startup}" Margin="26,2,0,2" ToolTipService.ShowOnDisabled="True" Click="LightOnStartup_Click" />
+                <CheckBox x:Name="RestoreLastModeBox" Content="{l:T restore_last_mode}" Margin="26,2,0,6" ToolTipService.ShowOnDisabled="True" Click="RestoreLastMode_Click" />
                 <CheckBox x:Name="AnimBox" Content="{l:T animations}" Click="Anim_Click" />
                 <CheckBox x:Name="WheelBox" Content="{l:T tray_wheel}" ToolTip="{l:T tray_wheel_tip}" Click="WheelBox_Click" />
                 <TextBlock x:Name="WheelHint" Text="" Visibility="Collapsed" FontSize="11" Foreground="{DynamicResource Muted}" Margin="30,0,0,0" />

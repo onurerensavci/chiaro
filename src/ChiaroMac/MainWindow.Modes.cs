@@ -238,11 +238,144 @@ public partial class MainWindow
 			RebuildModeTilesText();
 			ShowTab(selectedTab);
 			modeTask = ModeLoop(mode, modeCancellation, audio);
+			RememberMode(mode, brightness);
 		}
 		else
 		{
 			audio?.Dispose();
 		}
+	}
+
+	// =====================================================================
+	//  Son mod ("Son modu geri aç"): sürekli kaydedilir
+	// =====================================================================
+
+	private void RememberMode(string mode, double? brightness)
+	{
+		if (!LastMode.OnModeStarted(settings, mode, activeSceneId, brightness ?? BrightnessSlider.Value, mode == "Ses" ? macPrefs.AudioSource : null, DateTime.UtcNow)) return;
+		SaveSettings();
+		Log("Son mod kaydedildi: " + mode + (activeSceneId != null ? " (sahne " + activeSceneId + ")" : ""));
+	}
+
+	/// <summary>Saat tikinde: çalışan modun ayarları değiştiyse kaydı güncelle (çökmede de son hâl kalır).</summary>
+	private void RefreshLastMode()
+	{
+		if (modeName.Length == 0 || !LastMode.Refresh(settings, modeName, modeName == "Ses" ? macPrefs.AudioSource : null, DateTime.UtcNow)) return;
+		SaveSettings();
+	}
+
+	private void ClearLastMode(string why)
+	{
+		if (!LastMode.OnStaticChange(settings)) return;
+		SaveSettings();
+		Log("Son mod silindi: " + why);
+	}
+
+	private async Task StopModeKeepingLastMode()
+	{
+		keepLastModeOnStop = true;
+		try
+		{
+			await StopModeAsync();
+		}
+		finally
+		{
+			keepLastModeOnStop = false;
+		}
+	}
+
+	/// <summary>Oturum açılışında bağlandıktan sonra: kayıtlı son modu başlatır. true açıldı, false açılamadı, null atlandı (kullanıcı müdahalesi / mod zaten çalışıyor).</summary>
+	private async Task<bool?> RestoreLastModeAsync()
+	{
+		for (int i = 0; i < 40 && busy; i++) await Task.Delay(250);
+		if (settings.LastMode is not LastModeState last || !LastMode.IsRestorable(last)) return false;
+		if (autoCancelled)
+		{
+			Log("Son modu geri aç: kullanıcı müdahale etti, mod başlatılmadı.");
+			return null;
+		}
+		if (modeName.Length > 0)
+		{
+			Log($"Son modu geri aç: bir mod zaten çalışıyor ({modeName}), dokunulmadı.");
+			return null;
+		}
+		string mode = last.Mode;
+		Log($"Son modu geri aç: \"{mode}\" başlatılıyor (kayıt {last.SavedAtUtc:yyyy-MM-dd HH:mm:ss} UTC{(last.SceneId != null ? ", sahne " + last.SceneId : "")}).");
+		try
+		{
+			ApplyModeOptions(mode, last.Options);
+		}
+		catch (Exception ex)
+		{
+			Log("Son modu geri aç: kayıtlı mod ayarları okunamadı, mevcut ayarlarla başlatılıyor: " + ex.Message);
+		}
+		if (mode == "Ses" && last.AudioSource is int src && src is 0 or 1 && macPrefs.AudioSource != src)
+		{
+			macPrefs.AudioSource = src;
+			macPrefs.Save();
+			silentOptions++;
+			try
+			{
+				AuSource.SelectedIndex = src;
+			}
+			finally
+			{
+				silentOptions--;
+			}
+		}
+		// İzin yoksa (Ekran Kaydı) oturum açılışında sistem izin penceresi açmak yerine: kaydet, uyarıyı göster, geri düş.
+		if (OperatingSystem.IsMacOS() && (mode == "Ekran" || (mode == "Ses" && macPrefs.AudioSource == 0)) && !MacInterop.SckStream.HasPermission())
+		{
+			Log("Son modu geri aç: Ekran Kaydı izni yok, mod başlatılmadı.");
+			ShowPermission(Privacy.ScreenDenied());
+			return false;
+		}
+		if (mode == "Ekran")
+		{
+			int count = 0;
+			try
+			{
+				using CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+				count = (await ScreenSource.MonitorNamesAsync(cts.Token)).Length;
+			}
+			catch (Exception ex)
+			{
+				Log("Son modu geri aç: ekran listesi alınamadı: " + ex.Message);
+			}
+			int saved = settings.Screen.Monitor;
+			if (LastMode.ClampMonitor(settings.Screen, count))
+			{
+				Log($"Son modu geri aç: kayıtlı ekran ({saved + 1}) artık yok, birincil ekran kullanılıyor.");
+				_ = RefreshMonitors();
+			}
+		}
+		if (!ModeSupported(mode))
+		{
+			Log("Son modu geri aç: bağlı ampul bu modu desteklemiyor.");
+			DetailText.Text = UnsupportedText(mode);
+			return false;
+		}
+		Scene? scene = last.SceneId == null ? null : Scenes.FirstOrDefault(x => x.Id == last.SceneId && x.Mode == mode);
+		ShowTab(mode);
+		activeSceneId = scene?.Id;
+		await StartMode(mode, last.Brightness);
+		if (modeName != mode)
+		{
+			Log("Son modu geri aç: mod başlatılamadı" + (lastRunFailed || DetailText.Text.Length > 0 ? " (" + DetailText.Text + ")." : "."));
+			return false;
+		}
+		// Ekran/ses/Spotify kaynağı döngü içinde hata verirse (ör. izin) mod hemen durur: kısa bir süre bekleyip doğrula.
+		await Task.Delay(3000);
+		if (closed) return null;
+		if (modeName != mode)
+		{
+			Log("Son modu geri aç: mod başladıktan hemen sonra durdu (" + DetailText.Text + ").");
+			return false;
+		}
+		string name = scene != null ? scene.DisplayName : L.Mode(mode);
+		DetailText.Text = L.F("last_mode_restored", name);
+		Log("Son modu geri aç: mod geri açıldı: " + mode + (scene != null ? " (sahne " + scene.Id + ")" : ""));
+		return true;
 	}
 
 	/// <summary>Windows ModeLoop'unun karşılığı: Ekran, Ses, Spotify, Gökkuşağı, Şömine, Gün ışığı, Uyku, Uyandırma.</summary>
@@ -543,6 +676,12 @@ public partial class MainWindow
 				settings.SleepUntil = null;
 				sleepFadeStarted = false;
 				SaveSettings();
+			}
+			// Son mod yalnız bilerek durdurulunca silinir: uygulama/bilgisayar kapanışı, kopma ya da hata kaydı korur.
+			if (UserModes.Contains(mode) && LastMode.OnModeStopped(settings, mode, cts.IsCancellationRequested && !closed && !keepLastModeOnStop))
+			{
+				SaveSettings();
+				Log("Son mod silindi: " + mode + " durduruldu.");
 			}
 			modeCancellation = null;
 			modeName = "";

@@ -171,6 +171,7 @@ public partial class MainWindow
 		{
 			await StopModeAsync();
 		}
+		if (final && (code == 4 || code == 5) && modeName.Length == 0) ClearLastMode("sabit renk/beyaz verildi.");
 		livePending[code] = value;
 		if (final) liveCommitPending = true;
 		liveTimer ??= CreateLiveTimer();
@@ -959,6 +960,67 @@ public partial class MainWindow
 		Check(StartupLight.SkipReason(false, "Ekran", false) != null && StartupLight.SkipReason(false, "", true) != null && StartupLight.SkipReason(true, "", false) != null, "skip when mode running / already on / user acted");
 		return $"\nSettings card: title \"{title}\" (no 'Genel/General' left), \"{LightOnStartupBox.Content}\" right under startup, default off, persisted, disabled+tip when startup off, ticking needs startup first; "
 			+ $"autostart detection (--tray only), backoff {string.Join("/", waits)} s = {tries} tries within {StartupLight.Window.TotalSeconds:F0} s, no power-on over a running mode: PASS.";
+	}
+
+	/// <summary>Duman testi: "Son modu geri aç" seçeneği, son modun kaydı/silinmesi ve açılış kararı (kayıt/başlangıç kaydı değiştirilmez).</summary>
+	internal string RestoreModeCheck()
+	{
+		void Check(bool ok, string what)
+		{
+			if (!ok) throw new InvalidOperationException("Restore last mode: " + what);
+		}
+		bool en = L.Lang == L.English;
+		Check((RestoreLastModeBox.Content as string) == (en ? "Restore last mode" : "Son modu geri aç"), "checkbox label " + RestoreLastModeBox.Content);
+		SettingsBody.UpdateLayout();
+		Check(SettingsBody.Children.IndexOf(RestoreLastModeBox) == SettingsBody.Children.IndexOf(LightOnStartupBox) + 1, "must sit right under 'light on startup'");
+		Check(!new StudioSettings().RestoreLastMode && new StudioSettings().LastMode == null, "default off, nothing saved");
+		Check(System.Text.Json.JsonSerializer.Deserialize<StudioSettings>("{\"AutoStart\":true,\"LightOnStartup\":true}")!.RestoreLastMode == false, "old settings file -> off");
+		bool savedAuto = AutoStartBox.IsChecked == true, savedOpt = settings.RestoreLastMode;
+		LastModeState? savedLast = settings.LastMode;
+		try
+		{
+			AutoStartBox.IsChecked = true;
+			UpdateLightOnStartupBox();
+			Check(RestoreLastModeBox.IsEnabled && (RestoreLastModeBox.ToolTip as string) == L.T("restore_last_mode_tip"), "enabled with tip when startup on");
+			AutoStartBox.IsChecked = false;
+			UpdateLightOnStartupBox();
+			Check(!RestoreLastModeBox.IsEnabled && RestoreLastModeBox.Visibility == Visibility.Visible && (RestoreLastModeBox.ToolTip as string) == L.T("light_on_startup_needs"), "greyed with tip when startup off");
+			Check(ToolTipService.GetShowOnDisabled(RestoreLastModeBox), "tooltip must show while disabled");
+			RestoreLastModeBox.IsChecked = true;
+			RestoreLastMode_Click(RestoreLastModeBox, new RoutedEventArgs());
+			Check(!settings.RestoreLastMode && RestoreLastModeBox.IsChecked == false && AutoStartBox.IsChecked == false, "ticking while startup off must require startup first");
+			// Kayıt: başla -> ayar değişikliği -> (çökme: JSON'da kalır) -> kapanış korur -> bilerek durdurma siler.
+			StudioSettings s = new StudioSettings();
+			s.Screen.Monitor = 1;
+			s.Screen.Area = 2;
+			Check(LastMode.OnModeStarted(s, "Ekran", "oyun", 64.4, null, DateTime.UtcNow) && s.LastMode!.Mode == "Ekran" && s.LastMode.SceneId == "oyun" && s.LastMode.Brightness == 64, "start saves mode + scene + brightness");
+			s.Screen.Area = 3;
+			Check(LastMode.Refresh(s, "Ekran", null, DateTime.UtcNow) && !LastMode.Refresh(s, "Ekran", null, DateTime.UtcNow), "parameter change updates once");
+			StudioSettings crashed = System.Text.Json.JsonSerializer.Deserialize<StudioSettings>(System.Text.Json.JsonSerializer.Serialize(s))!;
+			ScreenOptions restored = System.Text.Json.JsonSerializer.Deserialize<ScreenOptions>(crashed.LastMode!.Options!)!;
+			Check(crashed.LastMode.Mode == "Ekran" && restored.Monitor == 1 && restored.Area == 3, "survives a crash (saved file has monitor/area)");
+			Check(!LastMode.OnModeStopped(s, "Ekran", deliberate: false) && s.LastMode != null, "app exit / shutdown / disconnect keeps it");
+			Check(LastMode.OnModeStopped(s, "Ekran", deliberate: true) && s.LastMode == null, "deliberate stop clears it");
+			LastMode.OnModeStarted(s, "Şömine", null, 50, null, DateTime.UtcNow);
+			Check(LastMode.OnStaticChange(s) && s.LastMode == null, "static colour / light off clears it");
+			Check(!LastMode.OnModeStarted(s, "Uyku", null, 50, null, DateTime.UtcNow) && !LastMode.OnModeStarted(s, "Uyandırma", null, 50, null, DateTime.UtcNow) && s.LastMode == null, "sleep/wake are not restorable");
+			Check(LastMode.ClampMonitor(restored, 1) && restored.Monitor == 0 && !LastMode.ClampMonitor(restored, 2), "missing monitor -> primary");
+			// Karar: yalnız otomatik başlatma; geri açma ışığı açmaya göre öncelikli; başarısızsa yalnız ışık seçeneği açıksa ışık açılır.
+			LastModeState last = new LastModeState { Mode = "Ekran" };
+			Check(LastMode.Decide(true, true, true, true, last) == StartupAction.RestoreMode, "both on -> restore wins");
+			Check(LastMode.Decide(true, true, false, true, last) == StartupAction.RestoreMode && LastMode.Decide(true, true, true, true, null) == StartupAction.PowerOn && LastMode.Decide(true, true, false, true, null) == StartupAction.None, "nothing saved -> light option decides");
+			Check(LastMode.Decide(false, true, true, true, last) == StartupAction.None && LastMode.Decide(true, false, true, true, last) == StartupAction.None, "manual launch / startup off -> nothing");
+			Check(LastMode.AfterFailedRestore(true) == StartupAction.PowerOn && LastMode.AfterFailedRestore(false) == StartupAction.None, "fallback");
+			Check(L.F("last_mode_restored", L.Mode("Ekran")) == (en ? "Restored last mode: " : "Son mod geri açıldı: ") + L.Mode("Ekran"), "status line " + L.F("last_mode_restored", L.Mode("Ekran")));
+		}
+		finally
+		{
+			AutoStartBox.IsChecked = savedAuto;
+			settings.RestoreLastMode = savedOpt;
+			settings.LastMode = savedLast;
+			UpdateLightOnStartupBox();
+		}
+		return $"\nRestore last mode: \"{RestoreLastModeBox.Content}\" right under \"{LightOnStartupBox.Content}\", default off, greyed+tip when startup off; saved on start/change, survives crash/exit, cleared on deliberate stop/static colour; autostart-only, restore beats light-on, fallback to light-on: PASS.";
 	}
 
 	/// <summary>Oyun sahnesinin mod ayarları gerçekten uygulanıyor mu (50 ms + parlaklık ekrana uysun)?</summary>

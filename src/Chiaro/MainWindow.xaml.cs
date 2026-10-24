@@ -31,6 +31,8 @@ public partial class MainWindow : Window
 	// ---- Bağlantı durumu ----
 	private readonly bool persistent;
 	private bool autoCancelled;
+	/// <summary>Mod döngüsü durunca son modu silme (kapanış/kopma gibi bilinçli olmayan durdurmalar).</summary>
+	private bool keepLastModeOnStop;
 	private CancellationTokenSource? modeCancellation;
 	private string modeName = "";
 	private Task modeTask = Task.CompletedTask;
@@ -148,7 +150,13 @@ public partial class MainWindow : Window
 				if (!(closed | connected) && ble.Ready)
 				{
 					operation?.Cancel();
-					modeCancellation?.Cancel();
+					if (modeCancellation != null)
+					{
+						// Bağlantı koptu: mod durur ama "son mod" kaydı korunur.
+						keepLastModeOnStop = true;
+						modeCancellation.Cancel();
+						KeepLastModeUntil(modeTask);
+					}
 					ble.Disconnect();
 					powerOn = null;
 					StatusText.Text = L.T("disconnected");
@@ -434,8 +442,18 @@ public partial class MainWindow : Window
 	{
 		ContentRendered -= StartupConnect;
 		// "Bilgisayar açılınca ışığı aç": yalnız Run kaydıyla (--tray) açılışta; elle açılışta ya da --updated ile yeniden açılışta değil.
-		bool lightUp = persistent && StartupLight.ShouldRun(autostartLaunch, settings.LightOnStartup, settings.AutoStart);
-		if (persistent && settings.LightOnStartup)
+		// "Son modu geri aç" de aynı kurala uyar ve kayıtlı bir mod varsa ışığı açmaya göre önceliklidir (tek akış, çift açma yok).
+		StartupAction action = persistent ? LastMode.Decide(autostartLaunch, settings.AutoStart, settings.LightOnStartup, settings.RestoreLastMode, settings.LastMode) : StartupAction.None;
+		bool lightUp = action != StartupAction.None;
+		string tag = action == StartupAction.RestoreMode ? "Son modu geri aç" : "Bilgisayar açılınca ışığı aç";
+		if (persistent && settings.RestoreLastMode)
+		{
+			Log(action == StartupAction.RestoreMode ? $"Son modu geri aç: otomatik başlatma algılandı (--tray); son ampule bağlanılıp \"{settings.LastMode!.Mode}\" modu başlatılacak (en çok ~60 sn yeniden denenir)."
+				: !autostartLaunch ? "Son modu geri aç: elle açılış (otomatik başlatma değil), mod geri açılmayacak."
+				: !settings.AutoStart ? "Son modu geri aç: Windows ile başlat kapalı, atlandı."
+				: "Son modu geri aç: kayıtlı son mod yok" + (settings.LightOnStartup ? ", yalnızca ışık açılacak." : ", atlandı."));
+		}
+		if (persistent && settings.LightOnStartup && action != StartupAction.RestoreMode)
 		{
 			Log(lightUp ? "Bilgisayar açılınca ışığı aç: otomatik başlatma algılandı (--tray); son ampule bağlanılıp ışık açılacak (en çok ~60 sn yeniden denenir)."
 				: autostartLaunch ? "Bilgisayar açılınca ışığı aç: Windows ile başlat kapalı, atlandı."
@@ -453,7 +471,7 @@ public partial class MainWindow : Window
 		}
 		if (lamp is null || lamp.Address == 0L || lamp.Address > 281474976710655L)
 		{
-			if (lightUp) Log("Bilgisayar açılınca ışığı aç: hatırlanan ampul yok, atlandı.");
+			if (lightUp) Log(tag + ": hatırlanan ampul yok, atlandı.");
 			return;
 		}
 		lamps.Add(lamp);
@@ -478,10 +496,10 @@ public partial class MainWindow : Window
 			}
 			if (busy || (Devices.SelectedItem as Lamp)?.Key != lamp.Key)
 			{
-				if (lightUp) Log("Bilgisayar açılınca ışığı aç: kullanıcı başka bir ampul/işlem seçti, vazgeçildi.");
+				if (lightUp) Log(tag + ": kullanıcı başka bir ampul/işlem seçti, vazgeçildi.");
 				return;
 			}
-			if (lightUp) Log($"Bilgisayar açılınca ışığı aç: bağlantı denemesi {attempt + 1} ({elapsed.Elapsed.TotalSeconds:F0} sn).");
+			if (lightUp) Log($"{tag}: bağlantı denemesi {attempt + 1} ({elapsed.Elapsed.TotalSeconds:F0} sn).");
 			await ConnectSelected(lamp);
 			if (ble.Ready || autoCancelled || closed)
 			{
@@ -493,11 +511,11 @@ public partial class MainWindow : Window
 				// Bluetooth oturum açılışında hemen hazır olmayabilir: artan aralıklarla ~60 sn boyunca yeniden dene.
 				if (StartupLight.NextDelay(attempt, elapsed.Elapsed) is not TimeSpan next)
 				{
-					Log($"Bilgisayar açılınca ışığı aç: {attempt + 1} denemede bağlanılamadı ({elapsed.Elapsed.TotalSeconds:F0} sn), vazgeçildi.");
+					Log($"{tag}: {attempt + 1} denemede bağlanılamadı ({elapsed.Elapsed.TotalSeconds:F0} sn), vazgeçildi.");
 					break;
 				}
 				wait = next;
-				Log($"Bilgisayar açılınca ışığı aç: bağlanılamadı, {wait.TotalSeconds:F0} sn sonra yeniden denenecek.");
+				Log($"{tag}: bağlanılamadı, {wait.TotalSeconds:F0} sn sonra yeniden denenecek.");
 			}
 			else if (attempt >= 2)
 			{
@@ -516,16 +534,26 @@ public partial class MainWindow : Window
 		}
 		if (lightUp && !closed)
 		{
-			if (ble.Ready) await StartupPowerOn();
-			else if (autoCancelled) Log("Bilgisayar açılınca ışığı aç: kullanıcı iptal etti / taradı, ışığa dokunulmadı.");
+			if (ble.Ready && action == StartupAction.RestoreMode)
+			{
+				bool? restored = await RestoreLastModeAsync();
+				if (restored == false && LastMode.AfterFailedRestore(settings.LightOnStartup) == StartupAction.PowerOn)
+				{
+					Log("Son modu geri aç: mod açılamadı; \"Bilgisayar açılınca ışığı aç\" açık olduğu için yalnızca ışık açılıyor.");
+					await StartupPowerOn(afterRestore: true);
+				}
+			}
+			else if (ble.Ready) await StartupPowerOn();
+			else if (autoCancelled) Log(tag + ": kullanıcı iptal etti / taradı, ışığa dokunulmadı.");
 		}
 	}
 
 	/// <summary>Açılışta bağlandıktan sonra bir kez: ışığı açar. Ampul son rengi ve parlaklığıyla yanar (Hue ampul bunları kendisi saklar).</summary>
-	private async Task StartupPowerOn()
+	private async Task StartupPowerOn(bool afterRestore = false)
 	{
 		for (int i = 0; i < 40 && busy; i++) await Task.Delay(250);
-		string? skip = StartupLight.SkipReason(autoCancelled, modeName, powerOn);
+		// Geri açma denemesinden sonra: StartMode'un koyduğu "müdahale" işareti kullanıcıdan gelmiyor.
+		string? skip = StartupLight.SkipReason(autoCancelled && !afterRestore, modeName, powerOn);
 		if (skip != null)
 		{
 			Log("Bilgisayar açılınca ışığı aç: " + skip + ", ışığa dokunulmadı.");
@@ -762,7 +790,120 @@ public partial class MainWindow : Window
 			UpdateBulbVisual(true);
 			UpdateControls();
 			modeTask = ModeLoop(mode, modeCancellation);
+			RememberMode(mode, brightness);
 		}
+	}
+
+	// =====================================================================
+	//  Son mod ("Son modu geri aç"): sürekli kaydedilir
+	// =====================================================================
+
+	private void RememberMode(string mode, double? brightness)
+	{
+		if (!LastMode.OnModeStarted(settings, mode, activeSceneId, brightness ?? BrightnessSlider.Value, null, DateTime.UtcNow)) return;
+		SaveSettings();
+		Log("Son mod kaydedildi: " + mode + (activeSceneId != null ? " (sahne " + activeSceneId + ")" : ""));
+	}
+
+	/// <summary>Saat tikinde: çalışan modun ayarları değiştiyse kaydı güncelle (çökmede de son hâl kalır).</summary>
+	private void RefreshLastMode()
+	{
+		if (modeName.Length == 0 || !LastMode.Refresh(settings, modeName, null, DateTime.UtcNow)) return;
+		SaveSettings();
+	}
+
+	private async void KeepLastModeUntil(Task loop)
+	{
+		try
+		{
+			await loop;
+		}
+		catch (Exception)
+		{
+		}
+		finally
+		{
+			keepLastModeOnStop = false;
+		}
+	}
+
+	private void ClearLastMode(string why)
+	{
+		if (!LastMode.OnStaticChange(settings)) return;
+		SaveSettings();
+		Log("Son mod silindi: " + why);
+	}
+
+	/// <summary>Otomatik başlatmada bağlandıktan sonra: kayıtlı son modu başlatır. true açıldı, false açılamadı, null atlandı (kullanıcı müdahalesi / mod zaten çalışıyor).</summary>
+	private async Task<bool?> RestoreLastModeAsync()
+	{
+		for (int i = 0; i < 40 && busy; i++) await Task.Delay(250);
+		if (settings.LastMode is not LastModeState last || !LastMode.IsRestorable(last)) return false;
+		if (autoCancelled)
+		{
+			Log("Son modu geri aç: kullanıcı müdahale etti, mod başlatılmadı.");
+			return null;
+		}
+		if (modeName.Length > 0)
+		{
+			Log($"Son modu geri aç: bir mod zaten çalışıyor ({modeName}), dokunulmadı.");
+			return null;
+		}
+		string mode = last.Mode;
+		Log($"Son modu geri aç: \"{mode}\" başlatılıyor (kayıt {last.SavedAtUtc:yyyy-MM-dd HH:mm:ss} UTC{(last.SceneId != null ? ", sahne " + last.SceneId : "")}).");
+		try
+		{
+			ApplyModeOptions(mode, last.Options);
+		}
+		catch (Exception ex)
+		{
+			Log("Son modu geri aç: kayıtlı mod ayarları okunamadı, mevcut ayarlarla başlatılıyor: " + ex.Message);
+		}
+		if (mode == "Ekran")
+		{
+			int count = 0;
+			try
+			{
+				count = ScreenSampler.MonitorNames().Length;
+			}
+			catch (Exception ex)
+			{
+				Log("Son modu geri aç: ekran listesi alınamadı: " + ex.Message);
+			}
+			int saved = settings.Screen.Monitor;
+			if (LastMode.ClampMonitor(settings.Screen, count))
+			{
+				Log($"Son modu geri aç: kayıtlı ekran ({saved + 1}) artık yok, birincil ekran kullanılıyor.");
+				RefreshMonitors();
+			}
+		}
+		if (!ModeSupported(mode))
+		{
+			Log("Son modu geri aç: bağlı ampul bu modu desteklemiyor.");
+			DetailText.Text = UnsupportedText(mode);
+			return false;
+		}
+		Scene? scene = last.SceneId == null ? null : Scenes.FirstOrDefault(x => x.Id == last.SceneId && x.Mode == mode);
+		ShowTab(mode, animate: false);
+		activeSceneId = scene?.Id;
+		await StartMode(mode, last.Brightness);
+		if (modeName != mode)
+		{
+			Log("Son modu geri aç: mod başlatılamadı" + (lastRunFailed ? " (" + DetailText.Text + ")." : "."));
+			return false;
+		}
+		// Ekran/ses kaynağı döngü içinde hata verirse mod hemen durur: kısa bir süre bekleyip doğrula.
+		await Task.Delay(3000);
+		if (closed) return null;
+		if (modeName != mode)
+		{
+			Log("Son modu geri aç: mod başladıktan hemen sonra durdu (" + DetailText.Text + ").");
+			return false;
+		}
+		string name = scene != null ? scene.DisplayName : L.Mode(mode);
+		DetailText.Text = L.F("last_mode_restored", name);
+		Log("Son modu geri aç: mod geri açıldı: " + mode + (scene != null ? " (sahne " + scene.Id + ")" : ""));
+		return true;
 	}
 
 	private async Task ModeLoop(string mode, CancellationTokenSource cts)
@@ -1071,6 +1212,12 @@ public partial class MainWindow : Window
 				sleepFadeStarted = false;
 				SaveSettings();
 			}
+			// Son mod yalnız bilerek durdurulunca silinir: uygulama/bilgisayar kapanışı, kopma ya da hata kaydı korur.
+			if (UserModes.Contains(mode) && LastMode.OnModeStopped(settings, mode, cts.IsCancellationRequested && !closed && !keepLastModeOnStop))
+			{
+				SaveSettings();
+				Log("Son mod silindi: " + mode + " durduruldu.");
+			}
 			modeCancellation = null;
 			modeName = "";
 			liveBrightness = null;
@@ -1338,6 +1485,23 @@ public partial class MainWindow : Window
 		LightOnStartupBox.IsChecked = settings.LightOnStartup;
 		LightOnStartupBox.IsEnabled = startup;
 		LightOnStartupBox.ToolTip = L.T(startup ? "light_on_startup_tip" : "light_on_startup_needs");
+		RestoreLastModeBox.IsChecked = settings.RestoreLastMode;
+		RestoreLastModeBox.IsEnabled = startup;
+		RestoreLastModeBox.ToolTip = L.T(startup ? "restore_last_mode_tip" : "light_on_startup_needs");
+	}
+
+	private void RestoreLastMode_Click(object sender, RoutedEventArgs e)
+	{
+		if (AutoStartBox.IsChecked != true)
+		{
+			DetailText.Text = L.T("light_on_startup_needs");
+			UpdateLightOnStartupBox();
+			return;
+		}
+		settings.RestoreLastMode = RestoreLastModeBox.IsChecked == true;
+		SaveSettings();
+		Log("Son modu geri aç: " + (settings.RestoreLastMode ? "açık" : "kapalı") + (settings.LastMode != null ? " (kayıtlı: " + settings.LastMode.Mode + ")" : ""));
+		UpdateLightOnStartupBox();
 	}
 
 	private void LightOnStartup_Click(object sender, RoutedEventArgs e)
@@ -1704,6 +1868,17 @@ public partial class MainWindow : Window
 	}
 
 	private async Task<bool> Send(int code, byte[] value)
+	{
+		bool ok = await SendCore(code, value);
+		// Sabit renk/beyaz ya da ışığı kapatma: geri açılacak mod kalmaz (Run zaten modu durdurdu).
+		if (ok && modeName.Length == 0 && (code == 4 || code == 5 || (code == 2 && value.Length > 0 && value[0] == 0)))
+		{
+			ClearLastMode(code == 2 ? "ışık kapatıldı." : "sabit renk/beyaz verildi.");
+		}
+		return ok;
+	}
+
+	private async Task<bool> SendCore(int code, byte[] value)
 	{
 		return await Run(L.T("sending"), async (CancellationToken ct) =>
 		{
