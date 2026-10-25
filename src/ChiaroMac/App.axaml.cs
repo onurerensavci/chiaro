@@ -42,7 +42,13 @@ public partial class App : Application
 			// kendiliğinden Show() eder; bu yüzden gizli başlangıçta MainWindow ataması ana döngü başladıktan sonraya bırakılır.
 			if (MainWindow.StartHidden) Avalonia.Threading.Dispatcher.UIThread.Post(() => desktop.MainWindow ??= w);
 			else desktop.MainWindow = w;
-			desktop.ShutdownRequested += (_, _) => w.PrepareForExit();
+			// İkinci açılış (ör. başka bir kopyadan başlatma): bu kopyanın penceresi öne gelir.
+			ShowListener? second = SingleInstance.Listen(() => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(w.BringToFrontFromSecondLaunch).GetTask());
+			desktop.ShutdownRequested += (_, _) =>
+			{
+				w.PrepareForExit();
+				second?.Dispose();
+			};
 			try
 			{
 				if (this.TryGetFeature<IActivatableLifetime>() is IActivatableLifetime act)

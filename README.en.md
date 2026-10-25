@@ -79,8 +79,8 @@ This is my first project of its kind; I built every step of it, from the idea to
 
 Get the latest version from the **[Releases page](https://github.com/onurerensavci/chiaro/releases/latest)**:
 
-- **Windows:** `Chiaro_v3.7.exe`. No installation needed; it's a single file with .NET included.
-- **macOS:** `Chiaro_v3.7_mac.zip`. Open the zip and move **Chiaro.app** to your **Applications** folder.
+- **Windows:** `Chiaro_v3.8.exe`. No installation needed; it's a single file with .NET included.
+- **macOS:** `Chiaro_v3.8_mac.zip`. Open the zip and move **Chiaro.app** to your **Applications** folder.
 
 Later versions can be updated from inside the app. Each file's SHA-256 is in the release notes and in the `.sha256` file next to it.
 
@@ -94,7 +94,7 @@ Later versions can be updated from inside the app. Each file's SHA-256 is in the
 
 ### Windows
 
-1. Run `Chiaro_v3.7.exe`. Because the app isn't signed, Windows SmartScreen may show a warning:
+1. Run `Chiaro_v3.8.exe`. Because the app isn't signed, Windows SmartScreen may show a warning:
    **More info → Run anyway**.
 2. Turn the bulb on and bring it close to the computer. The bulb needs to be discoverable over Bluetooth. If needed, make it visible in the Hue app on your phone under
    *Settings → Voice assistants → Make visible*, and turn off the phone's Hue Bluetooth connection.
@@ -102,7 +102,7 @@ Later versions can be updated from inside the app. Each file's SHA-256 is in the
 
 ### macOS
 
-1. Open `Chiaro_v3.7_mac.zip` and move **Chiaro.app** to the **Applications** folder (open at login and in-app updates work best from there).
+1. Open `Chiaro_v3.8_mac.zip` and move **Chiaro.app** to the **Applications** folder (open at login and in-app updates work best from there).
 2. Because the app isn't signed and notarized by Apple, macOS shows a *"Chiaro" cannot be verified* warning the first time:
    - **macOS 15 Sequoia and later:** press **Done**, then go to **System Settings → Privacy & Security**, scroll down and press **Open Anyway** next to "Chiaro was blocked", then confirm.
    - **macOS 14 Sonoma and earlier:** **right-click (Control-click) Chiaro → Open**, then **Open** again.

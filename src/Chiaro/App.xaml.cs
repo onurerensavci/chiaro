@@ -23,6 +23,8 @@ public partial class App : Application
 
 	private bool ownsMutex;
 
+	private InstanceSignal? showSignal;
+
 	protected override async void OnStartup(StartupEventArgs e)
 	{
 		base.OnStartup(e);
@@ -34,7 +36,7 @@ public partial class App : Application
 			Shutdown(0);
 			return;
 		}
-		// Dil, ilk iletiden (ör. "zaten açık") önce uygulanır. Duman testi Türkçe başlar, sonra İngilizceye geçer.
+		// Dil, ilk iletiden önce uygulanır. Duman testi Türkçe başlar, sonra İngilizceye geçer.
 		L.Apply(smoke ? L.Turkish : StudioSettings.Load().Language);
 		ShutdownMode = ShutdownMode.OnExplicitShutdown;
 		DispatcherUnhandledException += (_, args) =>
@@ -62,7 +64,10 @@ public partial class App : Application
 			ownsMutex = AcquireInstanceLock(updated ? 20000 : 0);
 			if (!ownsMutex)
 			{
-				MessageBox.Show(L.T("already_running"), "Chiaro");
+				// Zaten açık: ileti gösterme; çalışan kopyanın penceresini öne getirmesini iste ve sessizce kapan.
+				bool sent = InstanceSignal.SignalFirst();
+				EarlyLog(sent ? "İkinci açılış: Chiaro zaten çalışıyor; açık olan pencere öne getirilsin diye sinyal gönderildi, bu kopya kapanıyor."
+					: "İkinci açılış: Chiaro zaten çalışıyor ama yanıt vermiyor; bu kopya sessizce kapanıyor.");
 				Shutdown();
 				return;
 			}
@@ -79,6 +84,7 @@ public partial class App : Application
 			await RunSmokeTest(window, Path.GetFullPath(e.Args[1]));
 			return;
 		}
+		showSignal = InstanceSignal.Listen(() => window.Dispatcher.BeginInvoke(new Action(window.BringToFrontFromSecondLaunch)));
 		window.InitAutoStart();
 		window.StartServices();
 		window.StartUpdateServices(e.Args.Any(a => a.Equals(Updater.UpdatedArgument, StringComparison.OrdinalIgnoreCase)));
@@ -151,6 +157,7 @@ public partial class App : Application
 			result += await NotificationDbCheck(folder);
 			result += await UpdaterSelfTest.RunAsync(folder);
 			result += InstanceLockCheck();
+			result += SecondLaunchCheck();
 			result += AutoStart.MigrationCheck();
 
 			string path = Path.Combine(folder, "theme-test.json");
@@ -272,8 +279,36 @@ public partial class App : Application
 		ownsMutex = false;
 	}
 
+	/// <summary>Pencere yokken (ikinci kopya) günlük: CHIARO_LOG_FILE ayarlıysa oraya yazar.</summary>
+	private static void EarlyLog(string message)
+	{
+		string? file = Environment.GetEnvironmentVariable("CHIARO_LOG_FILE");
+		if (string.IsNullOrWhiteSpace(file)) return;
+		try { File.AppendAllText(file, $"{DateTimeOffset.Now:O} {message}\n"); } catch (Exception) { }
+	}
+
+	/// <summary>Duman testi: ikinci açılış sinyali (dinleyen yokken false, dinleyen varken öne getirme çağrılır; ileti yok).</summary>
+	private static string SecondLaunchCheck()
+	{
+		string name = InstanceSignal.ShowEventName + "-test-" + Environment.ProcessId;
+		if (InstanceSignal.SignalFirst(name)) throw new InvalidOperationException("Second launch: signal sent with nobody listening");
+		using ManualResetEventSlim got = new ManualResetEventSlim();
+		int calls = 0;
+		using (InstanceSignal? listener = InstanceSignal.Listen(() => { Interlocked.Increment(ref calls); got.Set(); }, name))
+		{
+			if (listener == null) throw new InvalidOperationException("Second launch: listener could not be created");
+			if (!InstanceSignal.SignalFirst(name) || !got.Wait(3000)) throw new InvalidOperationException("Second launch: first instance did not get the show request");
+			got.Reset();
+			if (!InstanceSignal.SignalFirst(name) || !got.Wait(3000)) throw new InvalidOperationException("Second launch: repeated request not delivered");
+		}
+		if (Strings.Tr.ContainsKey("already_running") || Strings.En.ContainsKey("already_running")) throw new InvalidOperationException("Second launch: old 'exit from the tray and reopen' text still present");
+		if (Strings.Tr.Values.Any(v => v.Contains("simgeden çıkıp yeniden aç")) || Strings.En.Values.Any(v => v.Contains("Exit from the tray icon and open it again"))) throw new InvalidOperationException("Second launch: old dialog text still present");
+		return $"\nSecond launch: no listener -> quiet exit; listener -> show request delivered x{calls}; no 'already running' dialog or text left: PASS.";
+	}
+
 	protected override void OnExit(ExitEventArgs e)
 	{
+		showSignal?.Dispose();
 		ReleaseInstanceLock();
 		instanceMutex?.Dispose();
 		base.OnExit(e);

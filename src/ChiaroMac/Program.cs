@@ -11,7 +11,7 @@ namespace HueStudio;
 internal static class Program
 {
 	public static string Version =>
-		typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion?.Split('+')[0] ?? "3.7.0";
+		typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion?.Split('+')[0] ?? "3.8.0";
 
 	[STAThread]
 	public static int Main(string[] args)
@@ -27,7 +27,10 @@ internal static class Program
 		using SingleInstance? single = SingleInstance.TryAcquire();
 		if (single == null)
 		{
-			AppLog.Write("Chiaro zaten çalışıyor; bu kopya kapanıyor.");
+			// Zaten açık: ileti gösterme; çalışan kopyadan penceresini öne getirmesini iste ve sessizce kapan.
+			bool sent = SingleInstance.SignalFirst();
+			AppLog.Write(sent ? "İkinci açılış: Chiaro zaten çalışıyor; açık olan pencere öne getirildi, bu kopya kapanıyor."
+				: "İkinci açılış: Chiaro zaten çalışıyor ama yanıt vermiyor; bu kopya sessizce kapanıyor.");
 			ActivateOtherInstance();
 			return 0;
 		}

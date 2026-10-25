@@ -1538,6 +1538,25 @@ public partial class MainWindow : Window
 		Activate();
 	}
 
+	/// <summary>
+	/// İkinci açılış (ör. masaüstü simgesi, Chiaro tepside zaten açıkken): mini çubuk açıksa onu, değilse ana pencereyi
+	/// gösterir, simge durumundaysa geri getirir ve öne alır.
+	/// </summary>
+	internal void BringToFrontFromSecondLaunch()
+	{
+		if (closed) return;
+		Window target = mini is { IsVisible: true } ? mini : this;
+		if (target == this) Show();
+		if (target.WindowState == WindowState.Minimized) target.WindowState = WindowState.Normal;
+		target.Activate();
+		// Başka bir uygulama öndeyse de görünür olsun: kısa süreli en üstte.
+		bool top = target.Topmost;
+		target.Topmost = true;
+		target.Topmost = top;
+		target.Focus();
+		Log("İkinci açılış: " + (target == this ? "ana pencere" : "mini çubuk") + " öne getirildi.");
+	}
+
 	private void HideToTray()
 	{
 		if (tray != null)
