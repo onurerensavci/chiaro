@@ -1127,6 +1127,22 @@ public partial class MainWindow : Window
 		Activate();
 	}
 
+	/// <summary>İkinci açılış: mini çubuk açıksa onu, değilse ana pencereyi gösterir, simge durumundan çıkarır ve öne alır.</summary>
+	internal void BringToFrontFromSecondLaunch()
+	{
+		if (closed) return;
+		if (mini is { IsVisible: true } m)
+		{
+			SetDockIcon(true);
+			if (m.WindowState == WindowState.Minimized) m.WindowState = WindowState.Normal;
+			m.Activate();
+			Log("İkinci açılış: mini çubuk öne getirildi.");
+			return;
+		}
+		RestoreWindow();
+		Log("İkinci açılış: ana pencere öne getirildi (görünür: " + IsVisible + ").");
+	}
+
 	internal void PrepareForExit()
 	{
 		exitRequested = true;

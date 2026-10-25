@@ -67,6 +67,8 @@ public class GattErrorTests
 	}
 }
 
+// Test36Tests CHIARO_DEMO_FAIL_CONNECTS ortam değişkenini kısa süre ayarlıyor: aynı koleksiyonda (sırayla) çalışsın.
+[Collection("Loc")]
 public class TransportTests
 {
 	private static (HueGattTransport t, DemoBackend b, List<string> log) Make()
