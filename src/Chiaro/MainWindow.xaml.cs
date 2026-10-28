@@ -1488,6 +1488,15 @@ public partial class MainWindow : Window
 		RestoreLastModeBox.IsChecked = settings.RestoreLastMode;
 		RestoreLastModeBox.IsEnabled = startup;
 		RestoreLastModeBox.ToolTip = L.T(startup ? "restore_last_mode_tip" : "light_on_startup_needs");
+		// Kapanışta ışığı kapatma başlangıç seçeneklerinden bağımsızdır: her zaman kullanılabilir.
+		LightOffOnShutdownBox.IsChecked = settings.LightOffOnShutdown;
+	}
+
+	private void LightOffOnShutdown_Click(object sender, RoutedEventArgs e)
+	{
+		settings.LightOffOnShutdown = LightOffOnShutdownBox.IsChecked == true;
+		SaveSettings();
+		Log("Bilgisayar kapanınca ışığı kapat: " + (settings.LightOffOnShutdown ? "açık" : "kapalı"));
 	}
 
 	private void RestoreLastMode_Click(object sender, RoutedEventArgs e)
@@ -1586,6 +1595,34 @@ public partial class MainWindow : Window
 	internal void PrepareForShutdown()
 	{
 		exitRequested = true;
+	}
+
+	/// <summary>
+	/// "Bilgisayar kapanınca ışığı kapat": oturum sonu olayında (WM_QUERYENDSESSION) zaman uyumlu çalışır. Çalışan mod
+	/// durdurulur (son mod kaydı korunur), ampule tek bir kapat komutu gönderilir ve yanıt en çok ~1,5 sn beklenir.
+	/// Normal çıkış (tepsi Çıkış) ve güncelleme yeniden başlatması buraya gelmez. Dönen metin günlük/test içindir.
+	/// </summary>
+	internal string LightOffForSystemEnd(ExitReason reason)
+	{
+		bool connected = ble.Ready;
+		string? skip = ShutdownLight.SkipReason(settings.LightOffOnShutdown, reason, connected, connected && ble.Supports(2));
+		if (skip != null)
+		{
+			Log($"Bilgisayar kapanınca ışığı kapat ({reason}): {skip}, ışığa dokunulmadı.");
+			return skip;
+		}
+		if (modeCancellation != null)
+		{
+			// Mod kapat komutuyla yarışmasın; kapanış bilinçli bir durdurma değil, "son mod" kaydı kalır.
+			keepLastModeOnStop = true;
+			modeCancellation.Cancel();
+			KeepLastModeUntil(modeTask);
+		}
+		operation?.Cancel();
+		string result = ShutdownLight.SendBlocking(ct => ble.Write(2, Protocol.Power(on: false), ct), ShutdownLight.WriteTimeout);
+		if (result == "ışık kapatıldı") powerOn = false;
+		Log($"Bilgisayar kapanınca ışığı kapat ({reason}): {result}");
+		return result;
 	}
 
 	/// <summary>Gizli test kancası: ayarlanırsa günlük satırları bu dosyaya da yazılır (ör. Wine'da açılış benzetimi).</summary>

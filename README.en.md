@@ -49,7 +49,7 @@ This is my first project of its kind; I built every step of it, from the idea to
 - 🎨 **45 preset colors + a color wheel**, HEX input and favorite colors.
 - 🔄 **In-app updates**: when a new version is out, an **Update** button appears in the header and a small notice shows in the quick panel. Read the release notes and download with one click; the file is verified, the app updates itself and restarts. You can also check manually with **Check for updates**.
 - 🌍 **English and Turkish**: the interface opens in English or Turkish depending on your system language; change it in **Settings → Dil / Language** and it applies instantly, without a restart.
-- 🚀 **Start with Windows**: starts quietly in the tray at sign-in. On a Mac, **Open at login** starts it in the menu bar only. Turn on **Settings → Turn on light at startup** and it also connects to your last bulb and switches the light on. **Restore last mode** restarts the mode that was running when you shut down (e.g. Screen sync), even if you changed the light from another app in the meantime (both only act when Chiaro starts with your computer, so Start with Windows / Open at login must be on).
+- 🚀 **Start with Windows**: starts quietly in the tray at sign-in. On a Mac, **Open at login** starts it in the menu bar only. Turn on **Settings → Turn on light at startup** and it also connects to your last bulb and switches the light on. **Restore last mode** restarts the mode that was running when you shut down (e.g. Screen sync), even if you changed the light from another app in the meantime (both only act when Chiaro starts with your computer, so Start with Windows / Open at login must be on). **Turn off light when computer shuts down** sends a turn-off command to the bulb when your computer shuts down or restarts; quitting the app normally or updating it leaves the light alone (this one works whether or not Start with Windows is on).
 - 🍎 **macOS (Apple Silicon)**: the same interface on the Mac: scenes, Screen sync, Audio (system audio or microphone), Spotify / Music, Rainbow, Fireplace, Daylight, timers, a menu bar icon, mini mode and in-app updates.
 
 ## 📸 Screenshots
@@ -79,8 +79,8 @@ This is my first project of its kind; I built every step of it, from the idea to
 
 Get the latest version from the **[Releases page](https://github.com/onurerensavci/chiaro/releases/latest)**:
 
-- **Windows:** `Chiaro_v3.8.exe`. No installation needed; it's a single file with .NET included.
-- **macOS:** `Chiaro_v3.8_mac.zip`. Open the zip and move **Chiaro.app** to your **Applications** folder.
+- **Windows:** `Chiaro_v3.9.exe`. No installation needed; it's a single file with .NET included.
+- **macOS:** `Chiaro_v3.9_mac.zip`. Open the zip and move **Chiaro.app** to your **Applications** folder.
 
 Later versions can be updated from inside the app. Each file's SHA-256 is in the release notes and in the `.sha256` file next to it.
 
@@ -94,7 +94,7 @@ Later versions can be updated from inside the app. Each file's SHA-256 is in the
 
 ### Windows
 
-1. Run `Chiaro_v3.8.exe`. Because the app isn't signed, Windows SmartScreen may show a warning:
+1. Run `Chiaro_v3.9.exe`. Because the app isn't signed, Windows SmartScreen may show a warning:
    **More info → Run anyway**.
 2. Turn the bulb on and bring it close to the computer. The bulb needs to be discoverable over Bluetooth. If needed, make it visible in the Hue app on your phone under
    *Settings → Voice assistants → Make visible*, and turn off the phone's Hue Bluetooth connection.
@@ -102,7 +102,7 @@ Later versions can be updated from inside the app. Each file's SHA-256 is in the
 
 ### macOS
 
-1. Open `Chiaro_v3.8_mac.zip` and move **Chiaro.app** to the **Applications** folder (open at login and in-app updates work best from there).
+1. Open `Chiaro_v3.9_mac.zip` and move **Chiaro.app** to the **Applications** folder (open at login and in-app updates work best from there).
 2. Because the app isn't signed and notarized by Apple, macOS shows a *"Chiaro" cannot be verified* warning the first time:
    - **macOS 15 Sequoia and later:** press **Done**, then go to **System Settings → Privacy & Security**, scroll down and press **Open Anyway** next to "Chiaro was blocked", then confirm.
    - **macOS 14 Sonoma and earlier:** **right-click (Control-click) Chiaro → Open**, then **Open** again.

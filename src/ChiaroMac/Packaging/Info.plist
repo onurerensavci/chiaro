@@ -26,9 +26,9 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.8</string>
+	<string>3.9</string>
 	<key>CFBundleVersion</key>
-	<string>3.8.0</string>
+	<string>3.9.0</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSArchitecturePriority</key>

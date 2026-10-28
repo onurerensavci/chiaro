@@ -28,6 +28,7 @@
     <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
     <Compile Include="../Chiaro/Core/StartupLight.cs" Link="Shared/StartupLight.cs" />
     <Compile Include="../Chiaro/Core/LastMode.cs" Link="Shared/LastMode.cs" />
+    <Compile Include="../Chiaro/Core/ShutdownLight.cs" Link="Shared/ShutdownLight.cs" />
     <Compile Include="../Chiaro/Core/StudioSettings.cs" Link="Shared/StudioSettings.cs" />
     <Compile Include="../Chiaro/Core/Scenes.cs" Link="Shared/Scenes.cs" />
     <Compile Include="../Chiaro/Core/Daylight.cs" Link="Shared/Daylight.cs" />

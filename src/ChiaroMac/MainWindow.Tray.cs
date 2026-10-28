@@ -201,6 +201,9 @@ public partial class MainWindow
 				case "updfail": DetailText.Text = L.T("mac_upd_helper_failed"); break;
 				case "updok": DetailText.Text = L.F("mac_upd_updated", Program.Version); break;
 				case "startupoff": AutostartBox.IsChecked = false; UpdateLightOnStartupBox(); break;
+				// Kapanma bildirimi benzetimi (macOS'ta NSWorkspaceWillPowerOffNotification ile aynı yol).
+				case "shutdown": LightOffForSystemEnd(ExitReason.SystemShutdown); break;
+				case "quitcheck": LightOffForSystemEnd(ExitReason.AppQuit); break;
 			}
 			await Task.Delay(400);
 		}
