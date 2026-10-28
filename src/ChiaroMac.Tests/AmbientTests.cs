@@ -156,23 +156,25 @@ public class MacSystemTests
 	[Fact]
 	public void Current_version_from_program()
 	{
-		Assert.Equal(new Version(3, 9, 0), MacUpdater.Current);
+		Assert.Equal(new Version(3, 10, 0), MacUpdater.Current);
 	}
 
 	[Fact]
-	public void Release_3_9_is_current_and_3_10_is_newer()
+	public void Release_3_10_is_current_and_3_11_is_newer()
 	{
 		Version cur = MacUpdater.Current;
 		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.7", "Chiaro_v3.7.exe", "Chiaro_v3.7_mac.zip"), cur).Status);
 		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.8", "Chiaro_v3.8.exe", "Chiaro_v3.8_mac.zip"), cur).Status);
 		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.9", "Chiaro_v3.9.exe", "Chiaro_v3.9_mac.zip"), cur).Status);
-		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.9.0", "Chiaro_v3.9.0_mac.zip"), cur).Status);
-		var (u, status) = MacUpdater.Evaluate(Release("v3.10", "Chiaro_v3.10.exe", "Chiaro_v3.10.exe.sha256", "Chiaro_v3.10_mac.zip", "Chiaro_v3.10_mac.zip.sha256"), cur);
+		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.10", "Chiaro_v3.10.exe", "Chiaro_v3.10_mac.zip"), cur).Status);
+		Assert.Equal("mac_upd_latest", MacUpdater.Evaluate(Release("v3.10.0", "Chiaro_v3.10.0_mac.zip"), cur).Status);
+		var (u, status) = MacUpdater.Evaluate(Release("v3.11", "Chiaro_v3.11.exe", "Chiaro_v3.11.exe.sha256", "Chiaro_v3.11_mac.zip", "Chiaro_v3.11_mac.zip.sha256"), cur);
 		Assert.Equal("mac_upd_available", status);
-		Assert.Equal("Chiaro_v3.10_mac.zip", u!.AssetName);
-		Assert.Equal("mac_upd_available", MacUpdater.Evaluate(Release("v3.9.1", "Chiaro_v3.9.1_mac.zip"), cur).Status);
+		Assert.Equal("Chiaro_v3.11_mac.zip", u!.AssetName);
+		Assert.Equal("mac_upd_available", MacUpdater.Evaluate(Release("v3.10.1", "Chiaro_v3.10.1_mac.zip"), cur).Status);
 		Assert.Equal("mac_upd_available", MacUpdater.Evaluate(Release("v4.0", "Chiaro_v4.0_mac.zip"), cur).Status);
 		Assert.True(MacUpdater.Compare(new Version(3, 10), new Version(3, 9, 0)) > 0);
+		Assert.True(MacUpdater.Compare(new Version(3, 11), new Version(3, 10, 0)) > 0);
 		Assert.Equal(0, MacUpdater.Compare(new Version(3, 9), new Version(3, 9, 0, 0)));
 	}
 

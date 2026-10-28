@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Chiaro logosu: ışıktan hilal "C" (yazı yok). Kaynak: logo/logo.svg; 16-24 px için logo/logo-small.svg.
+  <!-- Chiaro logosu: koyu cam üzerinde beyaz hilal "C" (yazı yok, 3.10). Kaynak: logo/logo.svg; 16-24 px için logo/logo-small.svg.
        Parıltı (bulanıklık) vektör DrawingImage ile çizilemediği için SVG'den 128 px PNG olarak üretilir. -->
   <BitmapImage x:Key="LogoImage" UriSource="pack://application:,,,/Assets/logo/logo-128.png" />
 </ResourceDictionary>

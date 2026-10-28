@@ -1,65 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Chiaro — small-size variant (16-24 px) of isiktan-c-kalin1.svg: eclipse disc whose lit rim forms a C -->
+  <!-- Chiaro small-size variant (16-24 px) of logo.svg: same white C, larger and without glow so it stays readable -->
   <defs>
     <clipPath id="sq"><path d="M1000.0,512.0 L999.9,613.2 L999.6,650.7 L999.0,678.7 L998.2,701.9 L997.3,722.0 L996.1,740.0 L994.6,756.3 L993.0,771.3 L991.1,785.2 L989.0,798.1 L986.7,810.3 L984.1,821.8 L981.3,832.7 L978.3,843.0 L975.1,852.8 L971.6,862.1 L967.8,871.0 L963.9,879.5 L959.7,887.6 L955.2,895.3 L950.5,902.6 L945.5,909.7 L940.2,916.4 L934.7,922.8 L928.9,928.9 L922.8,934.7 L916.4,940.2 L909.7,945.5 L902.6,950.5 L895.3,955.2 L887.6,959.7 L879.5,963.9 L871.0,967.8 L862.1,971.6 L852.8,975.1 L843.0,978.3 L832.7,981.3 L821.8,984.1 L810.3,986.7 L798.1,989.0 L785.2,991.1 L771.3,993.0 L756.3,994.6 L740.0,996.1 L722.0,997.3 L701.9,998.2 L678.7,999.0 L650.7,999.6 L613.2,999.9 L512.0,1000.0 L410.8,999.9 L373.3,999.6 L345.3,999.0 L322.1,998.2 L302.0,997.3 L284.0,996.1 L267.7,994.6 L252.7,993.0 L238.8,991.1 L225.9,989.0 L213.7,986.7 L202.2,984.1 L191.3,981.3 L181.0,978.3 L171.2,975.1 L161.9,971.6 L153.0,967.8 L144.5,963.9 L136.4,959.7 L128.7,955.2 L121.4,950.5 L114.3,945.5 L107.6,940.2 L101.2,934.7 L95.1,928.9 L89.3,922.8 L83.8,916.4 L78.5,909.7 L73.5,902.6 L68.8,895.3 L64.3,887.6 L60.1,879.5 L56.2,871.0 L52.4,862.1 L48.9,852.8 L45.7,843.0 L42.7,832.7 L39.9,821.8 L37.3,810.3 L35.0,798.1 L32.9,785.2 L31.0,771.3 L29.4,756.3 L27.9,740.0 L26.7,722.0 L25.8,701.9 L25.0,678.7 L24.4,650.7 L24.1,613.2 L24.0,512.0 L24.1,410.8 L24.4,373.3 L25.0,345.3 L25.8,322.1 L26.7,302.0 L27.9,284.0 L29.4,267.7 L31.0,252.7 L32.9,238.8 L35.0,225.9 L37.3,213.7 L39.9,202.2 L42.7,191.3 L45.7,181.0 L48.9,171.2 L52.4,161.9 L56.2,153.0 L60.1,144.5 L64.3,136.4 L68.8,128.7 L73.5,121.4 L78.5,114.3 L83.8,107.6 L89.3,101.2 L95.1,95.1 L101.2,89.3 L107.6,83.8 L114.3,78.5 L121.4,73.5 L128.7,68.8 L136.4,64.3 L144.5,60.1 L153.0,56.2 L161.9,52.4 L171.2,48.9 L181.0,45.7 L191.3,42.7 L202.2,39.9 L213.7,37.3 L225.9,35.0 L238.8,32.9 L252.7,31.0 L267.7,29.4 L284.0,27.9 L302.0,26.7 L322.1,25.8 L345.3,25.0 L373.3,24.4 L410.8,24.1 L512.0,24.0 L613.2,24.1 L650.7,24.4 L678.7,25.0 L701.9,25.8 L722.0,26.7 L740.0,27.9 L756.3,29.4 L771.3,31.0 L785.2,32.9 L798.1,35.0 L810.3,37.3 L821.8,39.9 L832.7,42.7 L843.0,45.7 L852.8,48.9 L862.1,52.4 L871.0,56.2 L879.5,60.1 L887.6,64.3 L895.3,68.8 L902.6,73.5 L909.7,78.5 L916.4,83.8 L922.8,89.3 L928.9,95.1 L934.7,101.2 L940.2,107.6 L945.5,114.3 L950.5,121.4 L955.2,128.7 L959.7,136.4 L963.9,144.5 L967.8,153.0 L971.6,161.9 L975.1,171.2 L978.3,181.0 L981.3,191.3 L984.1,202.2 L986.7,213.7 L989.0,225.9 L991.1,238.8 L993.0,252.7 L994.6,267.7 L996.1,284.0 L997.3,302.0 L998.2,322.1 L999.0,345.3 L999.6,373.3 L999.9,410.8 Z"/></clipPath>
-    <radialGradient id="bg" gradientUnits="userSpaceOnUse" cx="430" cy="470" r="760">
-      <stop offset="0" stop-color="#2A2E70"/>
-      <stop offset="0.4" stop-color="#1A1D52"/>
-      <stop offset="0.75" stop-color="#080924"/>
-      <stop offset="1" stop-color="#0B0C26"/>
-    </radialGradient>
-    <radialGradient id="halo" gradientUnits="userSpaceOnUse" cx="462.7" cy="512" r="572.0">
-      <stop offset="0" stop-color="#FF9A55" stop-opacity="0.34"/>
-      <stop offset="0.45" stop-color="#F0607E" stop-opacity="0.16"/>
-      <stop offset="0.75" stop-color="#8A3C9A" stop-opacity="0.05"/>
-      <stop offset="1" stop-color="#8A3C9A" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="vig" gradientUnits="userSpaceOnUse" cx="512" cy="512" r="740">
-      <stop offset="0.55" stop-color="#000" stop-opacity="0"/>
-      <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
-    </radialGradient>
-    <linearGradient id="lightg" gradientUnits="userSpaceOnUse" x1="409" y1="200.0" x2="534" y2="824.0">
-      <stop offset="0" stop-color="#FFE7B8"/>
-      <stop offset="0.3" stop-color="#FFB862"/>
-      <stop offset="0.62" stop-color="#FF8460"/>
-      <stop offset="1" stop-color="#F488B4"/>
+    <linearGradient id="rim" x1="0.1" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="hot" gradientUnits="userSpaceOnUse" cx="246" cy="482" r="265">
-      <stop offset="0" stop-color="#FFFBF2" stop-opacity="0.95"/>
-      <stop offset="0.5" stop-color="#FFF1DE" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#FFF1DE" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="disc" gradientUnits="userSpaceOnUse" cx="696" cy="422" r="387">
-      <stop offset="0" stop-color="#191B45"/>
-      <stop offset="0.6" stop-color="#0C0D2A"/>
-      <stop offset="1" stop-color="#05061A"/>
-    </radialGradient>
-    <linearGradient id="rim" gradientUnits="userSpaceOnUse" x1="829.2521707542794" y1="409" x2="623" y2="589">
-      <stop offset="0" stop-color="#9FB4FF" stop-opacity="0.42"/>
-      <stop offset="1" stop-color="#9FB4FF" stop-opacity="0"/>
-    </linearGradient>
-    <radialGradient id="sheen" gradientUnits="userSpaceOnUse" cx="512" cy="-220" r="760">
-      <stop offset="0.5" stop-color="#C8CCFF" stop-opacity="0.10"/>
-      <stop offset="1" stop-color="#C8CCFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.30"/>
-      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.04"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.12"/>
-    </linearGradient>
-    <filter id="glowBig" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="40"/></filter>
-    <filter id="glowMid" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="18"/></filter>
-    <filter id="glowSm" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
   </defs>
   <g clip-path="url(#sq)">
-    <rect width="1024" height="1024" fill="url(#bg)"/>
-    <rect width="1024" height="1024" fill="url(#halo)"/>
-    <!-- light: layered glow + crisp crescent -->
-    <path d="M748.00,306.24 A330.0,330.0 0 1 0 748.00,717.76 A250.0,250.0 0 1 1 748.00,306.24 Z" fill="url(#lightg)" filter="url(#glowBig)" opacity="0.55"/>
-    <path d="M748.00,306.24 A330.0,330.0 0 1 0 748.00,717.76 A250.0,250.0 0 1 1 748.00,306.24 Z" fill="url(#lightg)" filter="url(#glowMid)" opacity="0.6"/>
-    <path d="M748.00,306.24 A330.0,330.0 0 1 0 748.00,717.76 A250.0,250.0 0 1 1 748.00,306.24 Z" fill="url(#lightg)"/>
-    <path d="M748.00,306.24 A330.0,330.0 0 1 0 748.00,717.76 A250.0,250.0 0 1 1 748.00,306.24 Z" fill="url(#hot)"/>
-    <!-- shadow: the moon disc -->
-    <circle cx="606.0" cy="512" r="250.0" fill="url(#disc)"/>
+    <rect width="1024" height="1024" fill="#050506"/>
+    <path d="M1000.0,512.0 L999.9,613.2 L999.6,650.7 L999.0,678.7 L998.2,701.9 L997.3,722.0 L996.1,740.0 L994.6,756.3 L993.0,771.3 L991.1,785.2 L989.0,798.1 L986.7,810.3 L984.1,821.8 L981.3,832.7 L978.3,843.0 L975.1,852.8 L971.6,862.1 L967.8,871.0 L963.9,879.5 L959.7,887.6 L955.2,895.3 L950.5,902.6 L945.5,909.7 L940.2,916.4 L934.7,922.8 L928.9,928.9 L922.8,934.7 L916.4,940.2 L909.7,945.5 L902.6,950.5 L895.3,955.2 L887.6,959.7 L879.5,963.9 L871.0,967.8 L862.1,971.6 L852.8,975.1 L843.0,978.3 L832.7,981.3 L821.8,984.1 L810.3,986.7 L798.1,989.0 L785.2,991.1 L771.3,993.0 L756.3,994.6 L740.0,996.1 L722.0,997.3 L701.9,998.2 L678.7,999.0 L650.7,999.6 L613.2,999.9 L512.0,1000.0 L410.8,999.9 L373.3,999.6 L345.3,999.0 L322.1,998.2 L302.0,997.3 L284.0,996.1 L267.7,994.6 L252.7,993.0 L238.8,991.1 L225.9,989.0 L213.7,986.7 L202.2,984.1 L191.3,981.3 L181.0,978.3 L171.2,975.1 L161.9,971.6 L153.0,967.8 L144.5,963.9 L136.4,959.7 L128.7,955.2 L121.4,950.5 L114.3,945.5 L107.6,940.2 L101.2,934.7 L95.1,928.9 L89.3,922.8 L83.8,916.4 L78.5,909.7 L73.5,902.6 L68.8,895.3 L64.3,887.6 L60.1,879.5 L56.2,871.0 L52.4,862.1 L48.9,852.8 L45.7,843.0 L42.7,832.7 L39.9,821.8 L37.3,810.3 L35.0,798.1 L32.9,785.2 L31.0,771.3 L29.4,756.3 L27.9,740.0 L26.7,722.0 L25.8,701.9 L25.0,678.7 L24.4,650.7 L24.1,613.2 L24.0,512.0 L24.1,410.8 L24.4,373.3 L25.0,345.3 L25.8,322.1 L26.7,302.0 L27.9,284.0 L29.4,267.7 L31.0,252.7 L32.9,238.8 L35.0,225.9 L37.3,213.7 L39.9,202.2 L42.7,191.3 L45.7,181.0 L48.9,171.2 L52.4,161.9 L56.2,153.0 L60.1,144.5 L64.3,136.4 L68.8,128.7 L73.5,121.4 L78.5,114.3 L83.8,107.6 L89.3,101.2 L95.1,95.1 L101.2,89.3 L107.6,83.8 L114.3,78.5 L121.4,73.5 L128.7,68.8 L136.4,64.3 L144.5,60.1 L153.0,56.2 L161.9,52.4 L171.2,48.9 L181.0,45.7 L191.3,42.7 L202.2,39.9 L213.7,37.3 L225.9,35.0 L238.8,32.9 L252.7,31.0 L267.7,29.4 L284.0,27.9 L302.0,26.7 L322.1,25.8 L345.3,25.0 L373.3,24.4 L410.8,24.1 L512.0,24.0 L613.2,24.1 L650.7,24.4 L678.7,25.0 L701.9,25.8 L722.0,26.7 L740.0,27.9 L756.3,29.4 L771.3,31.0 L785.2,32.9 L798.1,35.0 L810.3,37.3 L821.8,39.9 L832.7,42.7 L843.0,45.7 L852.8,48.9 L862.1,52.4 L871.0,56.2 L879.5,60.1 L887.6,64.3 L895.3,68.8 L902.6,73.5 L909.7,78.5 L916.4,83.8 L922.8,89.3 L928.9,95.1 L934.7,101.2 L940.2,107.6 L945.5,114.3 L950.5,121.4 L955.2,128.7 L959.7,136.4 L963.9,144.5 L967.8,153.0 L971.6,161.9 L975.1,171.2 L978.3,181.0 L981.3,191.3 L984.1,202.2 L986.7,213.7 L989.0,225.9 L991.1,238.8 L993.0,252.7 L994.6,267.7 L996.1,284.0 L997.3,302.0 L998.2,322.1 L999.0,345.3 L999.6,373.3 L999.9,410.8 Z" fill="none" stroke="url(#rim)" stroke-width="40"/>
+    <path d="M791.42,337.55 A312,312 0 1 0 791.42,686.45 A258.25,258.25 0 1 1 791.42,337.55 Z" fill="#FFFFFF" transform="translate(512 512) scale(1.14) translate(-518 -512)"/>
   </g>
 </svg>
