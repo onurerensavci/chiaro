@@ -13,12 +13,12 @@ internal static class UpdaterSelfTest
 {
 	internal static UpdateInfo SampleInfo() => new UpdateInfo
 	{
-		Tag = "v3.9",
-		VersionText = "3.9",
-		AssetName = "Chiaro_v3.9.exe",
-		AssetUrl = "https://github.com/" + Updater.Repo + "/releases/download/v3.9/Chiaro_v3.9.exe",
+		Tag = "v3.11",
+		VersionText = "3.11",
+		AssetName = "Chiaro_v3.11.exe",
+		AssetUrl = "https://github.com/" + Updater.Repo + "/releases/download/v3.11/Chiaro_v3.11.exe",
 		AssetSize = 78_400_000,
-		Notes = Updater.PlainNotes((L.En ? "## Chiaro 3.9\n\n- 🌅 **Sunrise** is now smoother\n- 🎧 More vivid Spotify colors\n- Small fixes" : "## Chiaro 3.9\n\n- 🌅 **Gün doğumu** artık daha yumuşak\n- 🎧 Spotify renkleri daha canlı\n- Küçük hata düzeltmeleri") + "\n\nSHA-256: " + new string('a', 64)),
+		Notes = Updater.PlainNotes((L.En ? "## Chiaro 3.11\n\n- 🌅 **Sunrise** is now smoother\n- 🎧 More vivid Spotify colors\n- Small fixes" : "## Chiaro 3.11\n\n- 🌅 **Gün doğumu** artık daha yumuşak\n- 🎧 Spotify renkleri daha canlı\n- Küçük hata düzeltmeleri") + "\n\nSHA-256: " + new string('a', 64)),
 		PageUrl = Updater.ReleasesPage,
 	};
 
@@ -36,15 +36,15 @@ internal static class UpdaterSelfTest
 	internal static async Task<string> RunAsync(string folder)
 	{
 		// --- sürüm ---
-		Check(Updater.Current == new Version(3, 9, 0, 0), "current version is " + Updater.Current);
-		Check(Updater.CurrentText == "3.9", "current text " + Updater.CurrentText);
+		Check(Updater.Current == new Version(3, 10, 0, 0), "current version is " + Updater.Current);
+		Check(Updater.CurrentText == "3.10", "current text " + Updater.CurrentText);
 		Check(Updater.TryParseVersion("v3.2", out Version v32) && v32 == new Version(3, 2, 0, 0), "parse v3.2");
 		Check(Updater.TryParseVersion("V3.10-beta", out Version v310) && v310 == new Version(3, 10, 0, 0), "parse V3.10-beta");
 		Check(!Updater.TryParseVersion("latest", out _) && !Updater.TryParseVersion("", out _), "reject garbage");
-		Check(!Updater.IsNewer("v3.2", Updater.Current), "3.2 must not be newer than 3.9");
-		Check(!Updater.IsNewer("v3.4", Updater.Current) && !Updater.IsNewer("v3.5", Updater.Current) && !Updater.IsNewer("v3.6", Updater.Current) && !Updater.IsNewer("v3.7", Updater.Current) && !Updater.IsNewer("v3.8", Updater.Current), "3.4 … 3.8 must not be newer than 3.9");
-		Check(!Updater.IsNewer("v3.9", Updater.Current) && !Updater.IsNewer("3.9.0", Updater.Current), "3.9 equals current");
-		Check(Updater.IsNewer("v3.10", Updater.Current) && Updater.IsNewer("v3.9.1", Updater.Current) && Updater.IsNewer("v4.0", Updater.Current), "3.10 / 3.9.1 / 4.0 newer");
+		Check(!Updater.IsNewer("v3.2", Updater.Current), "3.2 must not be newer than 3.10");
+		Check(!Updater.IsNewer("v3.4", Updater.Current) && !Updater.IsNewer("v3.5", Updater.Current) && !Updater.IsNewer("v3.6", Updater.Current) && !Updater.IsNewer("v3.7", Updater.Current) && !Updater.IsNewer("v3.8", Updater.Current) && !Updater.IsNewer("v3.9", Updater.Current), "3.4 … 3.9 must not be newer than 3.10");
+		Check(!Updater.IsNewer("v3.10", Updater.Current) && !Updater.IsNewer("3.10.0", Updater.Current), "3.10 equals current");
+		Check(Updater.IsNewer("v3.11", Updater.Current) && Updater.IsNewer("v3.10.1", Updater.Current) && Updater.IsNewer("v4.0", Updater.Current), "3.11 / 3.10.1 / 4.0 newer");
 		Check(Updater.Compare(new Version(3, 10), new Version(3, 9)) > 0, "3.10 > 3.9 (numeric, not text)");
 		Check(Updater.Display(new Version(3, 5, 0, 0)) == "3.5" && Updater.Display(new Version(3, 5, 1, 0)) == "3.5.1", "display");
 
@@ -64,20 +64,22 @@ internal static class UpdaterSelfTest
 		Check(r.Status == UpdateStatus.UpToDate, "v3.8 feed -> up to date");
 		r = Updater.Evaluate(Release("v3.9", false, "", "Chiaro_v3.9.exe", "Chiaro_v3.9_mac.zip"), cur);
 		Check(r.Status == UpdateStatus.UpToDate, "v3.9 feed -> up to date");
-		r = Updater.Evaluate(Release("v3.11", true, "", "Chiaro_v3.11.exe"), cur);
+		r = Updater.Evaluate(Release("v3.10", false, "", "Chiaro_v3.10.exe", "Chiaro_v3.10_mac.zip"), cur);
+		Check(r.Status == UpdateStatus.UpToDate, "v3.10 feed -> up to date");
+		r = Updater.Evaluate(Release("v3.12", true, "", "Chiaro_v3.12.exe"), cur);
 		Check(r.Status == UpdateStatus.UpToDate, "prerelease ignored");
 		string hash = new string('b', 64);
-		r = Updater.Evaluate(Release("v3.10", false, "## Yenilikler\n- **Daha hızlı**\n\nSHA-256 (Chiaro_v3.10.exe): " + hash, "source.zip", "Chiaro_v3.10.exe.sha256", "Chiaro_v3.10.exe"), cur);
-		Check(r.Status == UpdateStatus.Available && r.Info!.VersionText == "3.10" && r.Info.AssetName == "Chiaro_v3.10.exe", "v3.10 feed -> available + exe asset");
-		Check(r.Info!.ShaUrl!.EndsWith("Chiaro_v3.10.exe.sha256") && r.Info.Sha256 == hash, "sha asset + sha in body");
+		r = Updater.Evaluate(Release("v3.11", false, "## Yenilikler\n- **Daha hızlı**\n\nSHA-256 (Chiaro_v3.11.exe): " + hash, "source.zip", "Chiaro_v3.11.exe.sha256", "Chiaro_v3.11.exe"), cur);
+		Check(r.Status == UpdateStatus.Available && r.Info!.VersionText == "3.11" && r.Info.AssetName == "Chiaro_v3.11.exe", "v3.11 feed -> available + exe asset");
+		Check(r.Info!.ShaUrl!.EndsWith("Chiaro_v3.11.exe.sha256") && r.Info.Sha256 == hash, "sha asset + sha in body");
 		Check(r.Info.Notes == "Yenilikler\n• Daha hızlı", "plain notes: [" + r.Info.Notes + "]");
-		string digestJson = "{\"tag_name\":\"v3.10\",\"assets\":[{\"name\":\"Chiaro_v3.10.exe\",\"size\":10,\"digest\":\"sha256:" + new string('d', 64) + "\",\"browser_download_url\":\"https://example.invalid/Chiaro_v3.10.exe\"}]}";
+		string digestJson = "{\"tag_name\":\"v3.11\",\"assets\":[{\"name\":\"Chiaro_v3.11.exe\",\"size\":10,\"digest\":\"sha256:" + new string('d', 64) + "\",\"browser_download_url\":\"https://example.invalid/Chiaro_v3.11.exe\"}]}";
 		r = Updater.Evaluate(digestJson, cur);
 		Check(r.Status == UpdateStatus.Available && r.Info!.Sha256 == new string('d', 64) && r.Info.ShaUrl == null, "GitHub asset digest used for SHA-256");
 		// Gerçek sürümlerde Mac paketi de aynı sürümde: Windows güncelleyicisi yalnızca .exe'yi seçmeli.
-		r = Updater.Evaluate(Release("v3.10", false, "", "Chiaro_v3.10_mac.zip", "Chiaro_v3.10_mac.zip.sha256", "Chiaro_v3.10.exe.sha256", "Chiaro_v3.10.exe"), cur);
-		Check(r.Status == UpdateStatus.Available && r.Info!.AssetName == "Chiaro_v3.10.exe" && r.Info.ShaUrl!.EndsWith("Chiaro_v3.10.exe.sha256"), "mac zip in same release ignored, exe picked");
-		r = Updater.Evaluate(Release("v3.10", false, "", "source.zip"), cur);
+		r = Updater.Evaluate(Release("v3.11", false, "", "Chiaro_v3.11_mac.zip", "Chiaro_v3.11_mac.zip.sha256", "Chiaro_v3.11.exe.sha256", "Chiaro_v3.11.exe"), cur);
+		Check(r.Status == UpdateStatus.Available && r.Info!.AssetName == "Chiaro_v3.11.exe" && r.Info.ShaUrl!.EndsWith("Chiaro_v3.11.exe.sha256"), "mac zip in same release ignored, exe picked");
+		r = Updater.Evaluate(Release("v3.11", false, "", "source.zip"), cur);
 		Check(r.Status == UpdateStatus.Error, "no exe -> error");
 		Check(Updater.PickExe(new[] { "Other.exe", "Chiaro_v3.5.exe" }, "3.5", "v3.5") == "Chiaro_v3.5.exe", "pick exact exe");
 		Check(Updater.PickExe(new[] { "Other.exe", "HueStudio_v3.5.exe" }, "3.5", "v3.5") == "HueStudio_v3.5.exe", "legacy HueStudio_vX.Y.exe fallback");
@@ -168,7 +170,7 @@ internal static class UpdaterSelfTest
 		Check(!File.Exists(exe + ".old") && File.ReadAllBytes(exe).SequenceEqual(newExe) && !Directory.Exists(Updater.TempFolder), "startup cleanup deletes .old and temp download");
 		Directory.Delete(dir, true);
 
-		// --- canlı GitHub denetimi (gerçek API; son sürüm ≤ 3.9 → güncel) ---
+		// --- canlı GitHub denetimi (gerçek API; son sürüm ≤ 3.10 → güncel) ---
 		string? feed = Environment.GetEnvironmentVariable(Updater.FeedVariable);
 		string feedLine = "";
 		if (!string.IsNullOrWhiteSpace(feed))
@@ -190,7 +192,7 @@ internal static class UpdaterSelfTest
 		};
 		liveLine += $" ({Updater.Repo})" + (legacy.Status == UpdateStatus.UpToDate ? $"; legacy repo {Updater.LegacyRepo}: UpToDate: PASS" : $"; legacy repo {Updater.LegacyRepo}: {legacy.Status} ({legacy.Message})");
 		if (legacy.Status == UpdateStatus.Available || legacy.Status == UpdateStatus.Error) throw new InvalidOperationException($"Legacy repo check unexpected: {legacy.Status} {legacy.Message}");
-		return "\nUpdater: version parse/compare, release JSON (v3.2/v3.4/v3.5/v3.6/v3.7/v3.8/v3.9 up to date, v3.10 available, prerelease ignored, exe + .sha256 asset pick, mac zip ignored, GitHub digest), SHA from notes, plain notes, "
+		return "\nUpdater: version parse/compare, release JSON (v3.2/v3.4/v3.5/v3.6/v3.7/v3.8/v3.9/v3.10 up to date, v3.11 available, prerelease ignored, exe + .sha256 asset pick, mac zip ignored, GitHub digest), SHA from notes, plain notes, "
 			+ $"download + SHA-256 verify (mismatch/non-exe rejected), swap/rollback/interrupted swap/cleanup, {lockNote}: PASS.\n" + liveLine + "." + feedLine;
 	}
 

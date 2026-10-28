@@ -79,8 +79,8 @@ Bu, benim bu türdeki ilk projem; fikirden tasarıma her adımını **Grok Bot**
 
 En son sürümü **[Releases sayfasından](https://github.com/onurerensavci/chiaro/releases/latest)** indir:
 
-- **Windows:** `Chiaro_v3.9.exe`. Kurulum gerekmez; tek dosya, .NET dahil.
-- **macOS:** `Chiaro_v3.9_mac.zip`. Zip'i aç, çıkan **Chiaro.app**'i **Uygulamalar** klasörüne taşı.
+- **Windows:** `Chiaro_v3.10.exe`. Kurulum gerekmez; tek dosya, .NET dahil.
+- **macOS:** `Chiaro_v3.10_mac.zip`. Zip'i aç, çıkan **Chiaro.app**'i **Uygulamalar** klasörüne taşı.
 
 Sonraki sürümleri uygulamanın içinden güncelleyebilirsin. Her dosyanın SHA-256 değeri sürüm notlarında ve yanındaki `.sha256` dosyasında.
 
@@ -94,7 +94,7 @@ Sonraki sürümleri uygulamanın içinden güncelleyebilirsin. Her dosyanın SHA
 
 ### Windows
 
-1. `Chiaro_v3.9.exe` dosyasını çalıştır. Uygulama imzalı olmadığı için Windows SmartScreen uyarı verebilir:
+1. `Chiaro_v3.10.exe` dosyasını çalıştır. Uygulama imzalı olmadığı için Windows SmartScreen uyarı verebilir:
    **Daha fazla bilgi → Yine de çalıştır**.
 2. Ampulü aç ve bilgisayara yaklaştır. Ampulün Bluetooth ile keşfedilebilir olması gerekir. Gerekirse telefondaki Hue uygulamasında
    *Ayarlar → Sesli asistanlar → Görünür yap* ile ampulü görünür yap ve telefonun Hue Bluetooth bağlantısını kapat.
@@ -102,7 +102,7 @@ Sonraki sürümleri uygulamanın içinden güncelleyebilirsin. Her dosyanın SHA
 
 ### macOS
 
-1. `Chiaro_v3.9_mac.zip` dosyasını aç ve **Chiaro.app**'i **Uygulamalar** klasörüne taşı (oturum açılışında başlatma ve uygulama içi güncelleme orada en iyi çalışır).
+1. `Chiaro_v3.10_mac.zip` dosyasını aç ve **Chiaro.app**'i **Uygulamalar** klasörüne taşı (oturum açılışında başlatma ve uygulama içi güncelleme orada en iyi çalışır).
 2. Uygulama Apple tarafından imzalanıp onaylanmadığı için ilk açılışta macOS *"Chiaro" doğrulanamadı* uyarısı verir:
    - **macOS 15 Sequoia ve sonrası:** uyarıda **Bitti**'ye bas, sonra **Sistem Ayarları → Gizlilik ve Güvenlik**'te aşağı kaydır, "Chiaro engellendi" satırında **Yine de Aç**'a bas ve onayla.
    - **macOS 14 Sonoma ve öncesi:** Chiaro'ya **sağ tıkla (Control-tık) → Aç**, çıkan pencerede yine **Aç**.
