@@ -147,6 +147,8 @@ public sealed class StudioSettings
 	public bool LightOnStartup { get; set; }
 	/// <summary>Bilgisayar açılınca (yalnız otomatik başlatmada) en son açık modu yeniden başlat. Varsayılan kapalı.</summary>
 	public bool RestoreLastMode { get; set; }
+	/// <summary>Bilgisayar kapanırken / yeniden başlarken (ve oturum kapanırken) ampule kapat komutu gönder. Başlangıç seçeneklerinden bağımsız; varsayılan kapalı.</summary>
+	public bool LightOffOnShutdown { get; set; }
 	/// <summary>Son etkin mod (sürekli kaydedilir; bilerek durdurulunca silinir).</summary>
 	public LastModeState? LastMode { get; set; }
 	public List<string> Favorites { get; set; } = new List<string>(Palette.DefaultFavorites);

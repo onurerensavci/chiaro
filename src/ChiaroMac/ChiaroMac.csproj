@@ -13,10 +13,10 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);CHIARO_MAC</DefineConstants>
-    <Version>3.8.0</Version>
-    <InformationalVersion>3.8.0</InformationalVersion>
-    <AssemblyVersion>3.8.0.0</AssemblyVersion>
-    <FileVersion>3.8.0.0</FileVersion>
+    <Version>3.9.0</Version>
+    <InformationalVersion>3.9.0</InformationalVersion>
+    <AssemblyVersion>3.9.0.0</AssemblyVersion>
+    <FileVersion>3.9.0.0</FileVersion>
     <Product>Chiaro</Product>
     <Company>Chiaro</Company>
     <AssemblyTitle>Chiaro</AssemblyTitle>
@@ -44,6 +44,7 @@
     <Compile Include="../Chiaro/Core/Effects.cs" Link="Shared/Effects.cs" />
     <Compile Include="../Chiaro/Core/StartupLight.cs" Link="Shared/StartupLight.cs" />
     <Compile Include="../Chiaro/Core/LastMode.cs" Link="Shared/LastMode.cs" />
+    <Compile Include="../Chiaro/Core/ShutdownLight.cs" Link="Shared/ShutdownLight.cs" />
   </ItemGroup>
 
   <ItemGroup>

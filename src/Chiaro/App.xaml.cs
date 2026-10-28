@@ -75,8 +75,11 @@ public partial class App : Application
 		Anim.InstallMicroInteractions();
 		MainWindow window = new MainWindow(!smoke);
 		MainWindow = window;
-		SessionEnding += (object _, SessionEndingCancelEventArgs _) =>
+		SessionEnding += (object _, SessionEndingCancelEventArgs args) =>
 		{
+			// Bilgisayar kapanıyor / yeniden başlıyor (Shutdown) ya da oturum kapanıyor (Logoff). Normal Çıkış ve güncelleme
+			// bu olaydan geçmez. "Bilgisayar kapanınca ışığı kapat" açıksa, kapanmadan önce ampule kapat komutu.
+			window.LightOffForSystemEnd(args.ReasonSessionEnding == ReasonSessionEnding.Shutdown ? ExitReason.SystemShutdown : ExitReason.Logoff);
 			window.PrepareForShutdown();
 		};
 		if (smoke)
@@ -446,6 +449,7 @@ public partial class App : Application
 		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-dil.png")));
 		string settingsTr = window.SettingsCardCheck();
 		string restoreTr = window.RestoreModeCheck();
+		string shutdownTr = window.ShutdownLightCheck();
 		window.SetStartupForTest(false);
 		await RenderContent(window, Path.Combine(folder, "tmp-genel.png"), 1240, 0, (window.SettingsCardElement, Path.Combine(folder, "12-ayarlar-baslangic-kapali.png")));
 		window.SetStartupForTest(true);
@@ -475,8 +479,10 @@ public partial class App : Application
 
 		string settingsEn = window.SettingsCardCheck();
 		string restoreEn = window.RestoreModeCheck();
+		string shutdownEn = window.ShutdownLightCheck();
 		result += settingsTr.Replace(": PASS.", "") + (settingsEn.Contains("title \"Settings\"") ? "; English: title \"Settings\", \"Turn on light at startup\": PASS." : throw new InvalidOperationException("English settings card"));
 		result += restoreTr.Replace(": PASS.", "") + (restoreEn.Contains("\"Restore last mode\"") ? "; English: \"Restore last mode\": PASS." : throw new InvalidOperationException("English restore option"));
+		result += shutdownTr.Replace(": PASS.", "") + (shutdownEn.Contains("\"Turn off light when computer shuts down\"") ? "; English label: PASS." : throw new InvalidOperationException("English shutdown option"));
 		window.SetUpdateForTest(null);
 		await RenderContent(window, Path.Combine(folder, "1-ana-pencere-en.png"), 1240, 1000,
 			(window.SceneCardElement, Path.Combine(folder, "2-sahneler-karti-en.png")),

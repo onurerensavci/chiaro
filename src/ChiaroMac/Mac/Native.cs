@@ -191,6 +191,23 @@ internal static unsafe class ObjcBlock
 		return t;
 	}
 
+	/// <summary>Tekrar tekrar çağrılabilen (id) bloğu, ör. NSNotificationCenter gözlemcisi. Bağlam serbest bırakılmaz (uygulama ömrü boyunca).</summary>
+	public static IntPtr Repeating(Action action) => Create((IntPtr)(delegate* unmanaged<IntPtr, IntPtr, void>)&InvokeRepeating, "v16@?0@8", action);
+
+	[UnmanagedCallersOnly]
+	private static void InvokeRepeating(IntPtr block, IntPtr arg)
+	{
+		try
+		{
+			Literal* l = (Literal*)block;
+			if (l->Context != IntPtr.Zero && GCHandle.FromIntPtr(l->Context).Target is Action a) a();
+		}
+		catch (Exception ex)
+		{
+			AppLog.Write("Blok geri çağrısı: " + ex.Message);
+		}
+	}
+
 	// ---- Hazır tamamlama blokları: (id nesne, NSError*) ve (NSError*)
 	public static IntPtr ObjectOrError(TaskCompletionSource<IntPtr> tcs) => Create((IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&InvokeObject, "v24@?0@8@16", tcs);
 

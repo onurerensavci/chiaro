@@ -1023,6 +1023,59 @@ public partial class MainWindow
 		return $"\nRestore last mode: \"{RestoreLastModeBox.Content}\" right under \"{LightOnStartupBox.Content}\", default off, greyed+tip when startup off; saved on start/change, survives crash/exit, cleared on deliberate stop/static colour; autostart-only, restore beats light-on, fallback to light-on: PASS.";
 	}
 
+	/// <summary>Duman testi: "Bilgisayar kapanınca ışığı kapat" seçeneği ve kapanış yolu (gerçek ampul yok: sahte yazım ile).</summary>
+	internal string ShutdownLightCheck()
+	{
+		void Check(bool ok, string what)
+		{
+			if (!ok) throw new InvalidOperationException("Light off on shutdown: " + what);
+		}
+		bool en = L.Lang == L.English;
+		Check((LightOffOnShutdownBox.Content as string) == (en ? "Turn off light when computer shuts down" : "Bilgisayar kapanınca ışığı kapat"), "label " + LightOffOnShutdownBox.Content);
+		Check((LightOffOnShutdownBox.ToolTip as string) == L.T("light_off_on_shutdown_tip"), "tooltip");
+		SettingsBody.UpdateLayout();
+		Check(SettingsBody.Children.IndexOf(LightOffOnShutdownBox) == SettingsBody.Children.IndexOf(RestoreLastModeBox) + 1, "must sit right under 'restore last mode'");
+		Check(!new StudioSettings().LightOffOnShutdown, "default off");
+		Check(System.Text.Json.JsonSerializer.Deserialize<StudioSettings>("{\"AutoStart\":true}")!.LightOffOnShutdown == false, "old settings file -> off");
+		Check(System.Text.Json.JsonSerializer.Deserialize<StudioSettings>(System.Text.Json.JsonSerializer.Serialize(new StudioSettings { LightOffOnShutdown = true }))!.LightOffOnShutdown, "persisted");
+		bool savedAuto = AutoStartBox.IsChecked == true, savedOpt = settings.LightOffOnShutdown;
+		try
+		{
+			// Başlangıç seçeneklerinden bağımsız: başlangıç kapalıyken de kullanılabilir.
+			AutoStartBox.IsChecked = false;
+			UpdateLightOnStartupBox();
+			Check(LightOffOnShutdownBox.IsEnabled, "must stay enabled when startup is off");
+			LightOffOnShutdownBox.IsChecked = true;
+			LightOffOnShutdown_Click(LightOffOnShutdownBox, new RoutedEventArgs());
+			Check(settings.LightOffOnShutdown && AutoStartBox.IsChecked == false, "ticking works without startup");
+			// Gerçek kapanış yolu (bu süreçte ampul bağlı değil): sessizce atlanır.
+			Check(LightOffForSystemEnd(ExitReason.SystemShutdown) == "ampul bağlı değil", "disconnected -> skipped");
+			Check(LightOffForSystemEnd(ExitReason.AppQuit) == "normal çıkış" && LightOffForSystemEnd(ExitReason.UpdateRestart) == "güncelleme için yeniden başlatma", "quit/update never fire");
+			settings.LightOffOnShutdown = false;
+			Check(LightOffForSystemEnd(ExitReason.SystemShutdown) == "seçenek kapalı", "option off -> skipped");
+		}
+		finally
+		{
+			AutoStartBox.IsChecked = savedAuto;
+			settings.LightOffOnShutdown = savedOpt;
+			UpdateLightOnStartupBox();
+		}
+		// Karar tablosu
+		Check(ShutdownLight.SkipReason(true, ExitReason.SystemShutdown, true, true) == null && ShutdownLight.SkipReason(true, ExitReason.Logoff, true, true) == null, "shutdown/restart/logoff + on + connected -> send");
+		Check(ShutdownLight.SkipReason(true, ExitReason.AppQuit, true, true) != null && ShutdownLight.SkipReason(true, ExitReason.UpdateRestart, true, true) != null, "quit/update -> no");
+		Check(ShutdownLight.SkipReason(false, ExitReason.SystemShutdown, true, true) != null && ShutdownLight.SkipReason(true, ExitReason.SystemShutdown, false, false) != null, "off / disconnected -> no");
+		// Gönderim: kapat baytları, kısa zaman aşımı, yeniden deneme yok.
+		byte[]? sent = null;
+		int calls = 0;
+		Check(ShutdownLight.SendBlocking(_ => { calls++; sent = Protocol.Power(on: false); return Task.CompletedTask; }, ShutdownLight.WriteTimeout) == "ışık kapatıldı" && calls == 1 && sent![0] == 0, "fake write sends power-off once");
+		System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+		string slow = ShutdownLight.SendBlocking(_ => new TaskCompletionSource().Task, TimeSpan.FromMilliseconds(400));
+		Check(slow.StartsWith("kapat komutu gönderildi") && sw.ElapsedMilliseconds < 1500, "stuck write does not block shutdown (" + sw.ElapsedMilliseconds + " ms)");
+		Check(ShutdownLight.SendBlocking(_ => throw new InvalidOperationException("x"), ShutdownLight.WriteTimeout).StartsWith("gönderilemedi"), "failed write reported, no retry");
+		Check(ShutdownLight.WriteTimeout <= TimeSpan.FromSeconds(2), "timeout <= 2 s");
+		return $"\nLight off on shutdown: \"{LightOffOnShutdownBox.Content}\" under \"{RestoreLastModeBox.Content}\", default off, independent of startup; shutdown/restart/logoff send one power-off (≤{ShutdownLight.WriteTimeout.TotalMilliseconds:F0} ms), quit/update/off/disconnected skip: PASS.";
+	}
+
 	/// <summary>Oyun sahnesinin mod ayarları gerçekten uygulanıyor mu (50 ms + parlaklık ekrana uysun)?</summary>
 	internal string TestOyunScene()
 	{
